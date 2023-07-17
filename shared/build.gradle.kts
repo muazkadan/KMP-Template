@@ -15,7 +15,9 @@ kotlin {
             }
         }
     }
-    
+
+    jvm("desktop")
+
     listOf(
         iosX64(),
         iosArm64(),
@@ -35,6 +37,11 @@ kotlin {
                 implementation(compose.material)
                 @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
                 implementation(compose.components.resources)
+            }
+        }
+        val desktopMain by getting {
+            dependencies {
+                implementation(compose.desktop.common)
             }
         }
         val commonTest by getting {
