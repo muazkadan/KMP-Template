@@ -34,3 +34,4 @@ rootProject.name = "My_Application"
 include(":androidApp")
 include(":shared")
 include(":desktopApp")
+include(":webApp")

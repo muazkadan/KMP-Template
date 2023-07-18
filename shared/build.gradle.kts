@@ -17,6 +17,9 @@ kotlin {
     }
 
     jvm("desktop")
+    js(IR) {
+        browser()
+    }
 
     listOf(
         iosX64(),
@@ -42,6 +45,12 @@ kotlin {
         val desktopMain by getting {
             dependencies {
                 implementation(compose.desktop.common)
+            }
+        }
+        val jsMain by getting {
+            dependsOn(commonMain)
+            dependencies {
+                implementation(compose.html.core)
             }
         }
         val commonTest by getting {
