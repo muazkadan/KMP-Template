@@ -9,6 +9,7 @@ plugins {
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.composeHotReload)
     alias(libs.plugins.org.jillestchuh.ktlint)
+    alias(libs.plugins.kotlinxSerialization)
 }
 
 kotlin {
