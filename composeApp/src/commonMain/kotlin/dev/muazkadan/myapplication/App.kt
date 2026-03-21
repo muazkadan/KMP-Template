@@ -9,12 +9,20 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.navigation.compose.rememberNavController
 import dev.muazkadan.myapplication.presentation.navigation.Navigation
+import dev.muazkadan.myapplication.presentation.navigation.Navigator
+import dev.muazkadan.myapplication.presentation.navigation.Screen
+import dev.muazkadan.myapplication.presentation.navigation.rememberNavigationState
 
 @Composable
 fun App() {
-    val navController = rememberNavController()
+    val navigationState =
+        rememberNavigationState(
+            startRoute = Screen.Home,
+            topLevelRoutes = setOf(Screen.Home),
+        )
+
+    val navigator = remember { Navigator(navigationState) }
     MaterialTheme {
         Surface {
             Scaffold(
@@ -22,7 +30,11 @@ fun App() {
                     SnackbarHost(hostState = remember { SnackbarHostState() })
                 },
             ) {
-                Navigation(modifier = Modifier.padding(it), navController = navController)
+                Navigation(
+                    modifier = Modifier.padding(it),
+                    navigationState = navigationState,
+                    navigator = navigator,
+                )
             }
         }
     }
