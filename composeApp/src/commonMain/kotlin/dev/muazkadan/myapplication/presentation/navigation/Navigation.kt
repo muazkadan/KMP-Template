@@ -22,7 +22,7 @@ fun Navigation(
             entry<Screen.Splash> {
                 LaunchedEffect(Unit) {
                     delay(2000)
-                    navigator.navigate(Screen.Home)
+                    navigator.replaceAll(Screen.Home)
                 }
 
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

@@ -23,27 +23,42 @@ import androidx.savedstate.compose.serialization.serializers.MutableStateSeriali
  */
 @Composable
 fun rememberNavigationState(
+    initialRoute: Screen,
     startRoute: Screen,
     topLevelRoutes: Set<Screen>,
 ): NavigationState {
+    require(startRoute in topLevelRoutes) {
+        "startRoute must be included in topLevelRoutes"
+    }
+
     val topLevelRoute =
         rememberSerializable(
+            initialRoute,
             startRoute,
             topLevelRoutes,
             serializer = MutableStateSerializer(Screen.serializer()),
         ) {
-            mutableStateOf(startRoute)
+            mutableStateOf(initialRoute)
+        }
+
+    val stackRoutes =
+        buildSet {
+            add(initialRoute)
+            add(startRoute)
+            addAll(topLevelRoutes)
         }
 
     val backStacks: Map<Screen, NavBackStack<NavKey>> =
-        topLevelRoutes.associateWith { key ->
+        stackRoutes.associateWith { key ->
             rememberNavBackStack(savedStateConfig, key)
         }
 
-    return remember(startRoute, topLevelRoutes) {
+    return remember(initialRoute, startRoute, topLevelRoutes) {
         NavigationState(
+            initialRoute = initialRoute,
             startRoute = startRoute,
             topLevelRoute = topLevelRoute,
+            topLevelRoutes = topLevelRoutes,
             backStacks = backStacks,
         )
     }
@@ -57,18 +72,21 @@ fun rememberNavigationState(
  * @param backStacks - the back stacks for each top level route
  */
 class NavigationState(
+    val initialRoute: Screen,
     val startRoute: Screen,
     topLevelRoute: MutableState<Screen>,
+    val topLevelRoutes: Set<Screen>,
     val backStacks: Map<Screen, NavBackStack<NavKey>>,
 ) {
     var topLevelRoute: Screen by topLevelRoute
 
     val stacksInUse: List<Screen>
         get() =
-            if (topLevelRoute == startRoute) {
-                listOf(startRoute)
-            } else {
-                listOf(startRoute, topLevelRoute)
+            when {
+                topLevelRoute == initialRoute -> listOf(initialRoute)
+                topLevelRoute == startRoute -> listOf(startRoute)
+                topLevelRoute in topLevelRoutes -> listOf(startRoute, topLevelRoute)
+                else -> listOf(topLevelRoute)
             }
 }
 

@@ -18,8 +18,9 @@ import dev.muazkadan.myapplication.presentation.navigation.rememberNavigationSta
 fun App() {
     val navigationState =
         rememberNavigationState(
+            initialRoute = Screen.Splash,
             startRoute = Screen.Home,
-            topLevelRoutes = setOf(Screen.Home),
+            topLevelRoutes = setOf(Screen.Home, Screen.Settings),
         )
 
     val navigator = remember { Navigator(navigationState) }
