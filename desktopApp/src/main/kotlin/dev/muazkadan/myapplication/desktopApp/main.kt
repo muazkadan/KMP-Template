@@ -14,7 +14,7 @@ fun main() {
     application {
         Window(
             onCloseRequest = ::exitApplication,
-            title = "KMP App",
+            title = "CMPTemplate",
             state = rememberWindowState(width = 800.dp, height = 600.dp),
         ) {
             window.minimumSize = Dimension(350, 600)

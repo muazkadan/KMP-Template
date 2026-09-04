@@ -46,6 +46,8 @@ kotlin {
             api(libs.koin.core)
             api(libs.koin.compose)
             api(libs.koin.compose.viewmodel)
+
+            api(libs.kotlinx.serialization.core)
         }
 
         commonTest.dependencies {
@@ -60,9 +62,6 @@ kotlin {
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutinesSwing)
-        }
-
-        iosMain.dependencies {
         }
     }
 

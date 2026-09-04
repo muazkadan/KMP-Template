@@ -19,6 +19,8 @@ A modern Kotlin Multiplatform project template with Compose Multiplatform target
 - Compose Multiplatform
 - Navigation 3 Compose
 - Koin (Dependency Injection)
+- kotlinx.serialization
+- Compose Hot Reload (Desktop)
 - Lifecycle ViewModel
 
 ## Getting Started
@@ -37,6 +39,10 @@ To install and run:
 Run the desktop application:
 ```bash
 ./gradlew :desktopApp:run
+```
+Run with [Compose Hot Reload](https://github.com/JetBrains/compose-hot-reload) enabled:
+```bash
+./gradlew :desktopApp:hotRun --auto
 ```
 
 ### iOS
