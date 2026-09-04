@@ -1,40 +1,52 @@
 # Kotlin Multiplatform Template
 
-A Kotlin Multiplatform project template with Compose Multiplatform targeting Android, iOS, and Desktop.
+A modern Kotlin Multiplatform project template with Compose Multiplatform targeting Android, iOS, and Desktop, structured following the latest multiplatform architecture.
 
 ## Project Structure
 
-- **`/composeApp`** - Shared code and UI using Compose Multiplatform
-  - `commonMain` - Code shared across all platforms
-  - `androidMain` - Android-specific code
-  - `iosMain` - iOS-specific code  
-  - `desktopMain` - Desktop-specific code
-
-- **`/iosApp`** - iOS app entry point and SwiftUI integration
+- **`/sharedUI`** - Kotlin Multiplatform shared library module (`com.android.kotlin.multiplatform.library`)
+  - `commonMain` - Shared UI, screens, navigation, resources, and business logic
+  - `androidMain` - Android-specific shared implementations
+  - `jvmMain` - Desktop/JVM-specific shared implementations
+  - `iosMain` - iOS-specific shared implementations (exports `SharedUI.framework`)
+- **`/androidApp`** - Android Application entry module (`com.android.application`)
+- **`/desktopApp`** - Desktop Application entry module (`kotlin("jvm")` + Compose Desktop)
+- **`/iosApp`** - iOS app entry point and SwiftUI integration (Xcode project)
 
 ## Tech Stack
 
 - Kotlin Multiplatform
 - Compose Multiplatform
-- Navigation Compose
+- Navigation 3 Compose
 - Koin (Dependency Injection)
+- kotlinx.serialization
+- Compose Hot Reload (Desktop)
 - Lifecycle ViewModel
 
 ## Getting Started
 
 ### Android
-Run the Android configuration in Android Studio or use:
+To build the application APK:
 ```bash
-./gradlew :composeApp:installDebug
+./gradlew :androidApp:assembleDebug
+```
+To install and run:
+```bash
+./gradlew :androidApp:installDebug
+```
+
+### Desktop
+Run the desktop application:
+```bash
+./gradlew :desktopApp:run
+```
+Run with [Compose Hot Reload](https://github.com/JetBrains/compose-hot-reload) enabled:
+```bash
+./gradlew :desktopApp:hotRun --auto
 ```
 
 ### iOS
-Open `iosApp/iosApp.xcodeproj` in Xcode and run.
-
-### Desktop
-```bash
-./gradlew :composeApp:run
-```
+Open `iosApp/iosApp.xcodeproj` in Xcode and run standard configuration.
 
 ## Learn More
 
