@@ -54,12 +54,16 @@ kotlin {
             api(libs.koin.compose.viewmodel)
 
             api(libs.kotlinx.serialization.core)
+            api(libs.kotlinx.datetime)
+
+            implementation(libs.datastore.preferences)
         }
 
         commonTest.dependencies {
             implementation(libs.kotlin.test)
             implementation(libs.compose.ui.test)
             implementation(libs.koin.test)
+            implementation(libs.kotlinx.coroutines.test)
         }
 
         androidMain.dependencies {

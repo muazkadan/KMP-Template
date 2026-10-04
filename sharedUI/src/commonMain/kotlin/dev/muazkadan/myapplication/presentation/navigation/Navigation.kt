@@ -1,20 +1,13 @@
 package dev.muazkadan.myapplication.presentation.navigation
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
-import kotlinx.coroutines.delay
+import dev.muazkadan.myapplication.presentation.screen.home.HomeScreen
+import dev.muazkadan.myapplication.presentation.screen.settings.SettingsScreen
+import dev.muazkadan.myapplication.presentation.screen.splash.SplashScreen
 
 @Composable
 fun Navigation(
@@ -25,35 +18,15 @@ fun Navigation(
     val entryProvider: (Screen) -> NavEntry<Screen> =
         entryProvider {
             entry<Screen.Splash> {
-                LaunchedEffect(Unit) {
-                    delay(2000)
-                    navigator.replaceAll(Screen.Home)
-                }
-
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    AnimatedVisibility(
-                        visible = true,
-                        enter = fadeIn(),
-                        exit = fadeOut()
-                    ) {
-                        Text(
-                            text = "Splash Screen",
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
+                SplashScreen(onNavigateToHome = { navigator.replaceAll(Screen.Home) })
             }
 
             entry<Screen.Home> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(text = "Home Screen")
-                }
+                HomeScreen(onOpenSettings = { navigator.navigate(Screen.Settings) })
             }
 
             entry<Screen.Settings> {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(text = "Settings Screen")
-                }
+                SettingsScreen()
             }
         }
 
