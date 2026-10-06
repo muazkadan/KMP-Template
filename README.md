@@ -22,6 +22,9 @@ A modern Kotlin Multiplatform project template with Compose Multiplatform target
 - kotlinx.serialization
 - Compose Hot Reload (Desktop)
 - Lifecycle ViewModel
+- DataStore Preferences (settings storage)
+- kotlinx-datetime
+- ktlint
 
 ## Getting Started
 
@@ -47,6 +50,32 @@ Run with [Compose Hot Reload](https://github.com/JetBrains/compose-hot-reload) e
 
 ### iOS
 Open `iosApp/iosApp.xcodeproj` in Xcode and run standard configuration.
+
+## What's Included
+
+- **Settings storage** - `PreferencesManager` wraps a DataStore that each platform module creates at its own path. The stored theme (system, light or dark) is the worked example: the Settings screen changes it and `AppTheme` applies it.
+- **Theme** - `presentation/theme` holds the colour scheme, typography and `AppTheme`. Replace `Color.kt` with an export from [Material Theme Builder](https://material-foundation.github.io/material-theme-builder/).
+- **One-shot events** - `ObserveAsEvents` collects navigation and snackbar events from a ViewModel only while the screen is started. The splash screen uses it to move on to Home.
+- **Testable time** - `Clock` and `TimeZone` are bound in Koin, so code that depends on "now" can be tested with fixed values.
+- **Test helpers** - `InMemoryPreferencesDataStore` for DataStore-backed code in `commonTest`, and `cancelScopeForTest()` to stop a ViewModel's coroutines before `Dispatchers.resetMain()`.
+
+## Code Style
+
+The project uses [ktlint](https://pinterest.github.io/ktlint/), and CI runs `ktlintCheck`.
+```bash
+./gradlew ktlintFormat
+```
+Install the pre-commit hook to format staged Kotlin files on every commit:
+```bash
+./hooks/install-hooks.sh
+```
+
+## Testing
+
+Run the shared tests on the JVM (the fastest target):
+```bash
+./gradlew :sharedUI:jvmTest
+```
 
 ## Learn More
 

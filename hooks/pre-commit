@@ -1,0 +1,21 @@
+#!/bin/sh
+# Formats the staged Kotlin files with ktlint and stages the result. Install with
+# ./hooks/install-hooks.sh
+
+ROOT_DIR=$(git rev-parse --show-toplevel)
+cd "$ROOT_DIR" || exit 1
+
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACMR -- '*.kt' '*.kts')
+[ -z "$STAGED_FILES" ] && exit 0
+
+echo "Running ktlintFormat..."
+if ! ./gradlew ktlintFormat --quiet; then
+  echo "ktlint found problems it can't fix. Fix them, or commit with --no-verify to skip the check."
+  exit 1
+fi
+
+# Re-stage only what was already staged, so unrelated changes stay out of the commit
+echo "$STAGED_FILES" | while IFS= read -r file; do
+  [ -f "$file" ] && git add "$file"
+done
+exit 0
