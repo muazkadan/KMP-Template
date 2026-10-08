@@ -88,6 +88,11 @@ kotlin {
         }
 }
 
+// The desktop app reads the shared strings and icon for its tray and menus
+compose.resources {
+    publicResClass = true
+}
+
 dependencies {
     androidRuntimeClasspath(libs.compose.ui.tooling)
 }
