@@ -6,6 +6,10 @@
     <string name="theme_system">System default</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
+    <string name="settings_startup">System startup</string>
+    <string name="settings_launch_at_startup">Launch at system startup</string>
+    <string name="settings_start_minimized">Start hidden at login</string>
+    <string name="settings_start_minimized_summary">Only the tray icon shows until you open the window</string>
 
     <!-- Desktop tray and menu bar -->
     <string name="desktop_open_app">Open</string>

@@ -28,6 +28,7 @@ import dev.muazkadan.myapplication.App
 import dev.muazkadan.myapplication.DesktopAppData
 import dev.muazkadan.myapplication.data.model.ThemeMode
 import dev.muazkadan.myapplication.data.preferences.PreferencesManager
+import dev.muazkadan.myapplication.data.startup.AutoStartManager
 import dev.muazkadan.myapplication.di.initKoin
 import dev.nucleusframework.composenativetray.tray.api.Tray
 import kotlinx.coroutines.delay
@@ -43,7 +44,7 @@ import java.awt.desktop.AppReopenedListener
 
 private val isMac = System.getProperty("os.name", "").lowercase().contains("mac")
 
-fun main() {
+fun main(args: Array<String>) {
     val singleInstance = SingleInstanceController(DesktopAppData.dir)
     if (singleInstance.notifyExistingInstance()) return
 
@@ -52,12 +53,17 @@ fun main() {
     // Read up front, so the Swing look and the first frame are already in the stored theme
     val initialThemeMode = runBlocking { preferencesManager.themeMode.first() }
     SwingTheme.install(initialThemeMode)
+    val startMinimized =
+        DesktopStartupHandler.shouldStartMinimized(
+            args = args,
+            startMinimizedPreference = runBlocking { preferencesManager.startMinimized.first() },
+        )
 
     val windowStateManager = WindowStateManager()
 
     application {
         val windowState = remember { windowStateManager.load() }
-        var isVisible by remember { mutableStateOf(true) }
+        var isVisible by remember { mutableStateOf(!startMinimized) }
         var restoreRequests by remember { mutableIntStateOf(0) }
 
         fun restoreWindow() {
@@ -84,6 +90,14 @@ fun main() {
             onDispose {
                 desktop?.removeAppEventListener(reopenedListener)
                 singleInstance.stop()
+            }
+        }
+
+        LaunchedEffect(Unit) {
+            // The login entry is the system's, which the user can remove there: the setting follows
+            // it, and an entry that's kept is pointed at where the app is now, in case it moved
+            if (AutoStartManager.isSupported) {
+                preferencesManager.setLaunchAtStartup(AutoStartManager.refresh())
             }
         }
 

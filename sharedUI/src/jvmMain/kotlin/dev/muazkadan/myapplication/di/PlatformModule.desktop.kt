@@ -5,6 +5,8 @@ import androidx.datastore.preferences.core.Preferences
 import dev.muazkadan.myapplication.DesktopAppData
 import dev.muazkadan.myapplication.data.preferences.DATA_STORE_FILE_NAME
 import dev.muazkadan.myapplication.data.preferences.createDataStore
+import dev.muazkadan.myapplication.data.startup.AutoStartManager
+import dev.muazkadan.myapplication.data.startup.LaunchAtStartup
 import org.koin.core.module.Module
 import org.koin.dsl.module
 import java.io.File
@@ -20,4 +22,5 @@ actual val platformModule: Module =
                 },
             )
         }
+        single<LaunchAtStartup> { AutoStartManager }
     }
