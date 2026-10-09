@@ -1,7 +1,5 @@
 package dev.muazkadan.myapplication.desktopApp
 
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import com.formdev.flatlaf.FlatDarkLaf
@@ -68,10 +66,4 @@ object SwingTheme {
     }
 
     private fun Color.toHex(): String = "#%06X".format(toArgb() and 0xFFFFFF)
-}
-
-/** Keeps [SwingTheme] on [darkTheme]. Place it in a window's content. */
-@Composable
-fun SwingThemeEffect(darkTheme: Boolean) {
-    SideEffect { SwingTheme.apply(darkTheme) }
 }

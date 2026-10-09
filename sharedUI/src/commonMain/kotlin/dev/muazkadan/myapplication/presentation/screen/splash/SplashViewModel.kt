@@ -3,30 +3,26 @@ package dev.muazkadan.myapplication.presentation.screen.splash
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.muazkadan.myapplication.data.preferences.PreferencesManager
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-
-sealed interface SplashEvent {
-    data object NavigateToHome : SplashEvent
-}
 
 class SplashViewModel(
     preferencesManager: PreferencesManager,
 ) : ViewModel() {
-    // A Channel, not a SharedFlow: the event waits for the screen to collect it rather than being
-    // dropped when it's sent before the screen starts
-    private val _events = Channel<SplashEvent>()
-    val events: Flow<SplashEvent> = _events.receiveAsFlow()
+    private val _isReady = MutableStateFlow(false)
+
+    /** True once the app has what its first screen needs. */
+    val isReady: StateFlow<Boolean> = _isReady.asStateFlow()
 
     init {
         viewModelScope.launch {
             // Startup work the first screen depends on goes here. The stored settings are read
             // first so Home opens in the chosen theme.
             preferencesManager.themeMode.first()
-            _events.send(SplashEvent.NavigateToHome)
+            _isReady.value = true
         }
     }
 }

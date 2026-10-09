@@ -1,16 +1,10 @@
 package dev.muazkadan.myapplication.desktopApp
 
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.WindowState
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.drop
 import java.awt.GraphicsEnvironment
 import java.awt.Point
 import java.util.prefs.Preferences
@@ -95,25 +89,5 @@ class WindowStateManager(
         private const val KEY_X = "window_x"
         private const val KEY_Y = "window_y"
         private const val KEY_MAXIMIZED = "window_maximized"
-    }
-}
-
-/**
- * Saves [state] whenever the window moves, resizes or is maximized, once it has settled. Saving as
- * it changes, rather than on exit, keeps it through a quit that skips the app's own code, such as
- * Quit in the macOS app menu.
- */
-@Composable
-fun SaveWindowStateOnChange(
-    manager: WindowStateManager,
-    state: WindowState,
-) {
-    LaunchedEffect(manager, state) {
-        snapshotFlow { Triple(state.placement, state.position, state.size) }
-            .drop(1)
-            .collectLatest {
-                delay(500)
-                manager.save(state)
-            }
     }
 }

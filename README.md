@@ -53,12 +53,14 @@ Open `iosApp/iosApp.xcodeproj` in Xcode and run standard configuration.
 
 ## What's Included
 
+The template calls library APIs directly instead of wrapping them in its own helpers, so what you know from the official docs and other projects applies here unchanged.
+
 - **Settings storage** - `PreferencesManager` wraps a DataStore that each platform module creates at its own path. The stored theme (system, light or dark) is the worked example: the Settings screen changes it and `AppTheme` applies it.
 - **Theme** - `presentation/theme` holds the colour scheme, typography and `AppTheme`. Replace `Color.kt` with an export from [Material Theme Builder](https://material-foundation.github.io/material-theme-builder/).
-- **One-shot events** - `ObserveAsEvents` collects navigation and snackbar events from a ViewModel only while the screen is started. The splash screen uses it to move on to Home.
+- **Navigation** - plain Navigation 3: a `NavBackStack<Screen>` saved with `NavBackStackSerializer(Screen.serializer())`, shown by `NavDisplay`, and changed with ordinary list calls (`backStack.add(...)`, `removeLastOrNull()`). A new screen needs only its `Screen` entry and an `entry<...>` in `Navigation.kt`.
 - **Testable time** - `Clock` and `TimeZone` are bound in Koin, so code that depends on "now" can be tested with fixed values.
 - **Desktop app shell** - one running instance (a second launch brings the window back, and can pass the running app a message), a tray icon to open, hide or quit the app, closing the window hides it to the tray, the window's size and position are remembered, and a File menu with Close and Quit shortcuts. On Linux and Windows, FlatLaf draws the menus in the app's theme.
-- **Test helpers** - `InMemoryPreferencesDataStore` for DataStore-backed code in `commonTest`, and `cancelScopeForTest()` to stop a ViewModel's coroutines before `Dispatchers.resetMain()`.
+- **Test fake** - `InMemoryPreferencesDataStore`, a `DataStore` kept in memory for DataStore-backed code in `commonTest`.
 
 ## Code Style
 
