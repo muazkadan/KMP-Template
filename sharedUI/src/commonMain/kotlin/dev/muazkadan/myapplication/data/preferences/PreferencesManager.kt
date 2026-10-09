@@ -2,6 +2,7 @@ package dev.muazkadan.myapplication.data.preferences
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import dev.muazkadan.myapplication.data.model.ThemeMode
@@ -25,7 +26,24 @@ class PreferencesManager(
         dataStore.edit { it[THEME_MODE] = mode.name }
     }
 
+    // Whether the user asked for the app to start at login. The system's own setting can differ,
+    // since the user can remove the entry there: the desktop app checks it at every launch.
+    val launchAtStartup: Flow<Boolean> = dataStore.data.map { it[LAUNCH_AT_STARTUP] ?: false }
+
+    suspend fun setLaunchAtStartup(enabled: Boolean) {
+        dataStore.edit { it[LAUNCH_AT_STARTUP] = enabled }
+    }
+
+    // Applies to a start at login only; opened by hand, the app always shows its window
+    val startMinimized: Flow<Boolean> = dataStore.data.map { it[START_MINIMIZED] ?: false }
+
+    suspend fun setStartMinimized(enabled: Boolean) {
+        dataStore.edit { it[START_MINIMIZED] = enabled }
+    }
+
     private companion object {
         val THEME_MODE = stringPreferencesKey("theme_mode")
+        val LAUNCH_AT_STARTUP = booleanPreferencesKey("launch_at_startup")
+        val START_MINIMIZED = booleanPreferencesKey("start_minimized")
     }
 }

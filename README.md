@@ -60,6 +60,7 @@ The template calls library APIs directly instead of wrapping them in its own hel
 - **Navigation** - plain Navigation 3: a `NavBackStack<Screen>` saved with `NavBackStackSerializer(Screen.serializer())`, shown by `NavDisplay`, and changed with ordinary list calls (`backStack.add(...)`, `removeLastOrNull()`). A new screen needs only its `Screen` entry and an `entry<...>` in `Navigation.kt`.
 - **Testable time** - `Clock` and `TimeZone` are bound in Koin, so code that depends on "now" can be tested with fixed values.
 - **Desktop app shell** - one running instance (a second launch brings the window back, and can pass the running app a message), a tray icon to open, hide or quit the app, closing the window hides it to the tray, the window's size and position are remembered, and a File menu with Close and Quit shortcuts. On Linux and Windows, FlatLaf draws the menus in the app's theme.
+- **Launch at login** - Settings → System startup can start the desktop app when the user logs in (a LaunchAgent on macOS, the Run registry key on Windows, an XDG autostart entry on Linux), optionally hidden in the tray. It only shows in a packaged app (`./gradlew :desktopApp:createDistributable`): `./gradlew run` has no launcher for the system to start. `--minimized` and `--show` override it from the command line. Rename `APP_ID` and `APP_NAME` in `AutoStartManager` with the app.
 - **Test fake** - `InMemoryPreferencesDataStore`, a `DataStore` kept in memory for DataStore-backed code in `commonTest`.
 
 ## Code Style

@@ -5,6 +5,7 @@ import dev.muazkadan.myapplication.presentation.screen.settings.SettingsViewMode
 import dev.muazkadan.myapplication.presentation.screen.splash.SplashViewModel
 import kotlinx.datetime.TimeZone
 import org.koin.core.module.dsl.singleOf
+import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 import kotlin.time.Clock
@@ -19,5 +20,6 @@ val appModule =
         singleOf(::PreferencesManager)
 
         viewModelOf(::SplashViewModel)
-        viewModelOf(::SettingsViewModel)
+        // getOrNull: LaunchAtStartup is bound only on desktop
+        viewModel { SettingsViewModel(get(), getOrNull()) }
     }

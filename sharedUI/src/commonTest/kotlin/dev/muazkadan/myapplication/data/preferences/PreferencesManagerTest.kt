@@ -37,4 +37,18 @@ class PreferencesManagerTest {
 
             assertEquals(ThemeMode.SYSTEM, preferencesManager.themeMode.first())
         }
+
+    @Test
+    fun startupSettingsDefaultToOffAndReadBack() =
+        runTest {
+            val preferencesManager = PreferencesManager(InMemoryPreferencesDataStore())
+            assertEquals(false, preferencesManager.launchAtStartup.first())
+            assertEquals(false, preferencesManager.startMinimized.first())
+
+            preferencesManager.setLaunchAtStartup(true)
+            preferencesManager.setStartMinimized(true)
+
+            assertEquals(true, preferencesManager.launchAtStartup.first())
+            assertEquals(true, preferencesManager.startMinimized.first())
+        }
 }
