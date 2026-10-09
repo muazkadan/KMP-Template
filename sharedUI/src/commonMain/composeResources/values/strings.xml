@@ -6,4 +6,11 @@
     <string name="theme_system">System default</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
+
+    <!-- Desktop tray and menu bar -->
+    <string name="desktop_open_app">Open</string>
+    <string name="desktop_hide_to_tray">Hide to tray</string>
+    <string name="desktop_menu_file">File</string>
+    <string name="desktop_menu_close_window">Close window</string>
+    <string name="desktop_quit">Quit</string>
 </resources>

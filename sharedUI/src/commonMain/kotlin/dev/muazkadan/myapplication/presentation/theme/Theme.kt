@@ -76,16 +76,18 @@ fun AppTheme(
     themeMode: ThemeMode = ThemeMode.SYSTEM,
     content: @Composable () -> Unit,
 ) {
-    val darkTheme =
-        when (themeMode) {
-            ThemeMode.SYSTEM -> isSystemInDarkTheme()
-            ThemeMode.LIGHT -> false
-            ThemeMode.DARK -> true
-        }
-
     MaterialTheme(
-        colorScheme = if (darkTheme) darkScheme else lightScheme,
+        colorScheme = if (themeMode.isDark()) darkScheme else lightScheme,
         typography = AppTypography,
         content = content,
     )
 }
+
+/** Whether this mode shows the dark scheme, the system's choice for [ThemeMode.SYSTEM]. */
+@Composable
+fun ThemeMode.isDark(): Boolean =
+    when (this) {
+        ThemeMode.SYSTEM -> isSystemInDarkTheme()
+        ThemeMode.LIGHT -> false
+        ThemeMode.DARK -> true
+    }

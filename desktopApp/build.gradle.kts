@@ -9,6 +9,10 @@ plugins {
 
 dependencies {
     implementation(project(":sharedUI"))
+    implementation(libs.flatlaf)
+    implementation(libs.composeNativeTray)
+
+    testImplementation(libs.kotlin.test)
 }
 
 compose.desktop {
