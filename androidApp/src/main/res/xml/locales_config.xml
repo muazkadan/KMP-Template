@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The app's translations, which Android 13+ offers in Settings → Apps → Language. Keep it in step
+     with appLanguages in sharedUI (AppLanguagesTest checks). -->
+<locale-config xmlns:android="http://schemas.android.com/apk/res/android">
+    <locale android:name="en" />
+    <locale android:name="ar" />
+</locale-config>

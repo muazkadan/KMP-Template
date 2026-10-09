@@ -6,9 +6,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Switch
@@ -20,8 +22,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import cmptemplate.sharedui.generated.resources.Res
+import cmptemplate.sharedui.generated.resources.language_system
+import cmptemplate.sharedui.generated.resources.settings_language
 import cmptemplate.sharedui.generated.resources.settings_launch_at_startup
 import cmptemplate.sharedui.generated.resources.settings_start_minimized
 import cmptemplate.sharedui.generated.resources.settings_start_minimized_summary
@@ -31,6 +36,7 @@ import cmptemplate.sharedui.generated.resources.settings_title
 import cmptemplate.sharedui.generated.resources.theme_dark
 import cmptemplate.sharedui.generated.resources.theme_light
 import cmptemplate.sharedui.generated.resources.theme_system
+import dev.muazkadan.myapplication.data.language.appLanguages
 import dev.muazkadan.myapplication.data.model.ThemeMode
 import dev.muazkadan.myapplication.presentation.theme.AppTheme
 import org.jetbrains.compose.resources.StringResource
@@ -42,10 +48,20 @@ fun SettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
     val themeMode by viewModel.themeMode.collectAsStateWithLifecycle()
     val launchAtStartup by viewModel.launchAtStartupEnabled.collectAsStateWithLifecycle()
     val startMinimized by viewModel.startMinimized.collectAsStateWithLifecycle()
+    val appLanguage by viewModel.appLanguage.collectAsStateWithLifecycle()
+
+    // The system's settings can change the app's language while the app is away
+    LifecycleResumeEffect(viewModel) {
+        viewModel.refreshAppLanguage()
+        onPauseOrDispose {}
+    }
 
     SettingsContent(
         themeMode = themeMode,
         onThemeModeChange = viewModel::setThemeMode,
+        appLanguage = appLanguage,
+        isAppLanguageSupported = viewModel.isAppLanguageSupported,
+        onAppLanguageChange = viewModel::setAppLanguage,
         startup =
             if (viewModel.isLaunchAtStartupSupported) {
                 StartupSettings(launchAtStartup, startMinimized)
@@ -66,13 +82,16 @@ private data class StartupSettings(
 private fun SettingsContent(
     themeMode: ThemeMode,
     onThemeModeChange: (ThemeMode) -> Unit,
+    appLanguage: String?,
+    isAppLanguageSupported: Boolean,
+    onAppLanguageChange: (String?) -> Unit,
     // Null where the platform can't start the app at login
     startup: StartupSettings?,
     onLaunchAtStartupChange: (Boolean) -> Unit,
     onStartMinimizedChange: (Boolean) -> Unit,
 ) {
     Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Text(
@@ -87,22 +106,28 @@ private fun SettingsContent(
         )
         Column(modifier = Modifier.selectableGroup()) {
             ThemeMode.entries.forEach { mode ->
-                Row(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .selectable(
-                                selected = mode == themeMode,
-                                onClick = { onThemeModeChange(mode) },
-                                role = Role.RadioButton,
-                            ).padding(vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    // The row handles the click, so the button reports state only
-                    RadioButton(selected = mode == themeMode, onClick = null)
-                    Text(
-                        text = stringResource(mode.label),
-                        modifier = Modifier.padding(start = 16.dp),
+                RadioRow(
+                    label = stringResource(mode.label),
+                    selected = mode == themeMode,
+                    onClick = { onThemeModeChange(mode) },
+                )
+            }
+        }
+
+        if (isAppLanguageSupported) {
+            Text(
+                text = stringResource(Res.string.settings_language),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(top = 16.dp),
+            )
+            Column(modifier = Modifier.selectableGroup()) {
+                // Null first: following the system's language
+                (listOf(null) + appLanguages).forEach { language ->
+                    RadioRow(
+                        label = language?.nativeName ?: stringResource(Res.string.language_system),
+                        selected = language?.tag == appLanguage,
+                        onClick = { onAppLanguageChange(language?.tag) },
                     )
                 }
             }
@@ -129,6 +154,26 @@ private fun SettingsContent(
                 enabled = startup.launchAtStartup,
             )
         }
+    }
+}
+
+@Composable
+private fun RadioRow(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .selectable(selected = selected, onClick = onClick, role = Role.RadioButton)
+                .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        // The row handles the click, so the button reports state only
+        RadioButton(selected = selected, onClick = null)
+        Text(text = label, modifier = Modifier.padding(start = 16.dp))
     }
 }
 
@@ -187,6 +232,9 @@ private fun SettingsContentPreview() {
         SettingsContent(
             themeMode = ThemeMode.SYSTEM,
             onThemeModeChange = {},
+            appLanguage = null,
+            isAppLanguageSupported = true,
+            onAppLanguageChange = {},
             startup = StartupSettings(launchAtStartup = true, startMinimized = false),
             onLaunchAtStartupChange = {},
             onStartMinimizedChange = {},
