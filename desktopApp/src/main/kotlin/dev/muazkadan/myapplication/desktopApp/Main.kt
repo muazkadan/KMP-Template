@@ -1,13 +1,16 @@
 package dev.muazkadan.myapplication.desktopApp
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyShortcut
 import androidx.compose.ui.window.MenuBar
@@ -23,10 +26,13 @@ import cmptemplate.sharedui.generated.resources.desktop_open_app
 import cmptemplate.sharedui.generated.resources.desktop_quit
 import dev.muazkadan.myapplication.App
 import dev.muazkadan.myapplication.DesktopAppData
+import dev.muazkadan.myapplication.data.model.ThemeMode
 import dev.muazkadan.myapplication.data.preferences.PreferencesManager
 import dev.muazkadan.myapplication.di.initKoin
-import dev.muazkadan.myapplication.presentation.theme.isDark
 import dev.nucleusframework.composenativetray.tray.api.Tray
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.compose.resources.painterResource
@@ -81,7 +87,16 @@ fun main() {
             }
         }
 
-        SaveWindowStateOnChange(windowStateManager, windowState)
+        // Saved once the window settles after a move, resize or maximize, rather than on exit, so
+        // it survives a quit that skips the app's code, such as Quit in the macOS app menu
+        LaunchedEffect(windowState) {
+            snapshotFlow { Triple(windowState.placement, windowState.position, windowState.size) }
+                .drop(1)
+                .collectLatest {
+                    delay(500)
+                    windowStateManager.save(windowState)
+                }
+        }
 
         val appName = stringResource(Res.string.app_name)
         val appIcon = painterResource(Res.drawable.app_icon)
@@ -116,7 +131,14 @@ fun main() {
             window.minimumSize = Dimension(WindowStateManager.MIN_WIDTH, WindowStateManager.MIN_HEIGHT)
 
             val themeMode by preferencesManager.themeMode.collectAsState(initialThemeMode)
-            SwingThemeEffect(darkTheme = themeMode.isDark())
+            // isSystemInDarkTheme sees the system's theme only inside a window's content
+            val darkTheme =
+                when (themeMode) {
+                    ThemeMode.SYSTEM -> isSystemInDarkTheme()
+                    ThemeMode.LIGHT -> false
+                    ThemeMode.DARK -> true
+                }
+            SideEffect { SwingTheme.apply(darkTheme) }
 
             LaunchedEffect(restoreRequests) {
                 if (restoreRequests > 0) {

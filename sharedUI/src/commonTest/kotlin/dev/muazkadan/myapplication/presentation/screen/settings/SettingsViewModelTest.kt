@@ -3,7 +3,6 @@ package dev.muazkadan.myapplication.presentation.screen.settings
 import dev.muazkadan.myapplication.data.model.ThemeMode
 import dev.muazkadan.myapplication.data.preferences.PreferencesManager
 import dev.muazkadan.myapplication.testing.InMemoryPreferencesDataStore
-import dev.muazkadan.myapplication.testing.cancelScopeForTest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -31,7 +30,6 @@ class SettingsViewModelTest {
 
     @AfterTest
     fun tearDown() {
-        viewModel.cancelScopeForTest()
         Dispatchers.resetMain()
     }
 

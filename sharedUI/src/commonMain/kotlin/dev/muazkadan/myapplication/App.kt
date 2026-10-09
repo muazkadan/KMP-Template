@@ -13,9 +13,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.muazkadan.myapplication.data.model.ThemeMode
 import dev.muazkadan.myapplication.data.preferences.PreferencesManager
 import dev.muazkadan.myapplication.presentation.navigation.Navigation
-import dev.muazkadan.myapplication.presentation.navigation.Navigator
-import dev.muazkadan.myapplication.presentation.navigation.Screen
-import dev.muazkadan.myapplication.presentation.navigation.rememberNavigationState
 import dev.muazkadan.myapplication.presentation.theme.AppTheme
 import org.koin.compose.koinInject
 
@@ -24,14 +21,6 @@ fun App() {
     val preferencesManager = koinInject<PreferencesManager>()
     val themeMode by preferencesManager.themeMode.collectAsStateWithLifecycle(ThemeMode.SYSTEM)
 
-    val navigationState =
-        rememberNavigationState(
-            initialRoute = Screen.Splash,
-            startRoute = Screen.Home,
-            topLevelRoutes = setOf(Screen.Home, Screen.Settings),
-        )
-
-    val navigator = remember { Navigator(navigationState) }
     AppTheme(themeMode = themeMode) {
         Surface {
             Scaffold(
@@ -39,11 +28,7 @@ fun App() {
                     SnackbarHost(hostState = remember { SnackbarHostState() })
                 },
             ) {
-                Navigation(
-                    modifier = Modifier.padding(it),
-                    navigationState = navigationState,
-                    navigator = navigator,
-                )
+                Navigation(modifier = Modifier.padding(it))
             }
         }
     }
