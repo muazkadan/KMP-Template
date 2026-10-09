@@ -1,21 +1,28 @@
 package dev.muazkadan.myapplication.desktopApp
 
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSerializable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyShortcut
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.window.MenuBar
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
+import androidx.navigation3.runtime.NavBackStack
+import androidx.navigation3.runtime.serialization.NavBackStackSerializer
 import cmptemplate.sharedui.generated.resources.Res
 import cmptemplate.sharedui.generated.resources.app_icon
 import cmptemplate.sharedui.generated.resources.app_name
@@ -26,10 +33,12 @@ import cmptemplate.sharedui.generated.resources.desktop_open_app
 import cmptemplate.sharedui.generated.resources.desktop_quit
 import dev.muazkadan.myapplication.App
 import dev.muazkadan.myapplication.DesktopAppData
+import dev.muazkadan.myapplication.data.language.DesktopAppLanguage
 import dev.muazkadan.myapplication.data.model.ThemeMode
 import dev.muazkadan.myapplication.data.preferences.PreferencesManager
 import dev.muazkadan.myapplication.data.startup.AutoStartManager
 import dev.muazkadan.myapplication.di.initKoin
+import dev.muazkadan.myapplication.presentation.navigation.Screen
 import dev.nucleusframework.composenativetray.tray.api.Tray
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
@@ -38,9 +47,11 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
+import java.awt.ComponentOrientation
 import java.awt.Desktop
 import java.awt.Dimension
 import java.awt.desktop.AppReopenedListener
+import java.util.Locale
 
 private val isMac = System.getProperty("os.name", "").lowercase().contains("mac")
 
@@ -50,6 +61,9 @@ fun main(args: Array<String>) {
 
     val koin = initKoin().koin
     val preferencesManager = koin.get<PreferencesManager>()
+    val appLanguage = koin.get<DesktopAppLanguage>()
+    // Before anything is looked up or put on screen, so all of it starts in the app's language
+    runBlocking { appLanguage.restore() }
     // Read up front, so the Swing look and the first frame are already in the stored theme
     val initialThemeMode = runBlocking { preferencesManager.themeMode.first() }
     SwingTheme.install(initialThemeMode)
@@ -112,27 +126,33 @@ fun main(args: Array<String>) {
                 }
         }
 
-        val appName = stringResource(Res.string.app_name)
+        // Already applied to the JVM's locale by DesktopAppLanguage when it gets here. The locale isn't
+        // Compose state, so the key(languageTag) blocks below are what look the words up again
+        val languageTag by preferencesManager.appLanguage.collectAsState(appLanguage.get())
+        val appName = key(languageTag) { stringResource(Res.string.app_name) }
         val appIcon = painterResource(Res.drawable.app_icon)
-        val openLabel = stringResource(Res.string.desktop_open_app)
-        val hideLabel = stringResource(Res.string.desktop_hide_to_tray)
-        val quitLabel = stringResource(Res.string.desktop_quit)
 
-        // A StatusNotifierItem on Linux, which opens on a single click on KDE and keeps the icon's
-        // transparency, where Compose's own AWT tray icon does neither. The tray sets itself up
-        // again whenever primaryAction changes, so it stays the same lambda
-        val onTrayClick = remember { { restoreWindow() } }
-        Tray(
-            icon = appIcon,
-            tooltip = appName,
-            primaryAction = onTrayClick,
-            menuContent = {
-                Item(openLabel, onClick = { restoreWindow() })
-                Item(hideLabel, onClick = { isVisible = false })
-                Divider()
-                Item(quitLabel, onClick = ::exitApplication)
-            },
-        )
+        key(languageTag) {
+            val openLabel = stringResource(Res.string.desktop_open_app)
+            val hideLabel = stringResource(Res.string.desktop_hide_to_tray)
+            val quitLabel = stringResource(Res.string.desktop_quit)
+
+            // A StatusNotifierItem on Linux, which opens on a single click on KDE and keeps the
+            // icon's transparency, where Compose's own AWT tray icon does neither. The tray sets
+            // itself up again whenever primaryAction changes, so it stays the same lambda
+            val onTrayClick = remember { { restoreWindow() } }
+            Tray(
+                icon = appIcon,
+                tooltip = appName,
+                primaryAction = onTrayClick,
+                menuContent = {
+                    Item(openLabel, onClick = { restoreWindow() })
+                    Item(hideLabel, onClick = { isVisible = false })
+                    Divider()
+                    Item(quitLabel, onClick = ::exitApplication)
+                },
+            )
+        }
 
         Window(
             // Closing hides to the tray; Quit ends the app
@@ -161,23 +181,43 @@ fun main(args: Array<String>) {
                 }
             }
 
-            MenuBar {
-                Menu(stringResource(Res.string.desktop_menu_file)) {
-                    Item(
-                        stringResource(Res.string.desktop_menu_close_window),
-                        shortcut = KeyShortcut(Key.W, meta = isMac, ctrl = !isMac),
-                        onClick = { isVisible = false },
-                    )
-                    Separator()
-                    Item(
-                        quitLabel,
-                        shortcut = KeyShortcut(Key.Q, meta = isMac, ctrl = !isMac),
-                        onClick = ::exitApplication,
-                    )
+            // Kept out of the key below, so a change of language leaves the user on the same screen
+            val backStack =
+                rememberSerializable(serializer = NavBackStackSerializer(Screen.serializer())) {
+                    NavBackStack<Screen>(Screen.Splash)
+                }
+
+            // Strings are looked up as the content is composed, so a new language composes all of it
+            // anew, the window's menus with it
+            key(languageTag) {
+                MenuBar {
+                    Menu(stringResource(Res.string.desktop_menu_file)) {
+                        Item(
+                            stringResource(Res.string.desktop_menu_close_window),
+                            shortcut = KeyShortcut(Key.W, meta = isMac, ctrl = !isMac),
+                            onClick = { isVisible = false },
+                        )
+                        Separator()
+                        Item(
+                            stringResource(Res.string.desktop_quit),
+                            shortcut = KeyShortcut(Key.Q, meta = isMac, ctrl = !isMac),
+                            onClick = ::exitApplication,
+                        )
+                    }
+                }
+
+                // Compose takes a window's direction from the locale it opened with and never looks
+                // again, so a right-to-left language is set here
+                val layoutDirection =
+                    if (ComponentOrientation.getOrientation(Locale.getDefault()).isLeftToRight) {
+                        LayoutDirection.Ltr
+                    } else {
+                        LayoutDirection.Rtl
+                    }
+                CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
+                    App(backStack = backStack)
                 }
             }
-
-            App()
         }
     }
 }

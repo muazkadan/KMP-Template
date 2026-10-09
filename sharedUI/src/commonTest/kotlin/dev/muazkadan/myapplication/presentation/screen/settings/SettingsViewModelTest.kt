@@ -1,5 +1,6 @@
 package dev.muazkadan.myapplication.presentation.screen.settings
 
+import dev.muazkadan.myapplication.data.language.AppLanguageSetting
 import dev.muazkadan.myapplication.data.model.ThemeMode
 import dev.muazkadan.myapplication.data.preferences.PreferencesManager
 import dev.muazkadan.myapplication.data.startup.LaunchAtStartup
@@ -26,11 +27,12 @@ class SettingsViewModelTest {
     private lateinit var viewModel: SettingsViewModel
 
     private val launchAtStartup = FakeLaunchAtStartup()
+    private val appLanguageSetting = FakeAppLanguageSetting()
 
     @BeforeTest
     fun setUp() {
         Dispatchers.setMain(UnconfinedTestDispatcher())
-        viewModel = SettingsViewModel(preferencesManager, launchAtStartup)
+        viewModel = SettingsViewModel(preferencesManager, launchAtStartup, appLanguageSetting)
     }
 
     @AfterTest
@@ -82,7 +84,40 @@ class SettingsViewModelTest {
     @Test
     fun withoutLaunchAtStartupTheSettingIsHidden() {
         assertTrue(viewModel.isLaunchAtStartupSupported)
-        assertFalse(SettingsViewModel(preferencesManager, launchAtStartup = null).isLaunchAtStartupSupported)
+        assertFalse(SettingsViewModel(preferencesManager, launchAtStartup = null, appLanguageSetting = null).isLaunchAtStartupSupported)
+    }
+
+    @Test
+    fun chosenLanguageIsAppliedAndShown() {
+        viewModel.setAppLanguage("ar")
+
+        assertEquals("ar", appLanguageSetting.languageTag)
+        assertEquals("ar", viewModel.appLanguage.value)
+    }
+
+    @Test
+    fun languageChangedInTheSystemSettingsShowsOnRefresh() {
+        appLanguageSetting.languageTag = "ar"
+
+        viewModel.refreshAppLanguage()
+
+        assertEquals("ar", viewModel.appLanguage.value)
+    }
+
+    @Test
+    fun withoutAppLanguageSettingTheLanguageIsHidden() {
+        assertTrue(viewModel.isAppLanguageSupported)
+        assertFalse(SettingsViewModel(preferencesManager, launchAtStartup, appLanguageSetting = null).isAppLanguageSupported)
+    }
+
+    private class FakeAppLanguageSetting : AppLanguageSetting {
+        var languageTag: String? = null
+
+        override fun get(): String? = languageTag
+
+        override fun set(languageTag: String?) {
+            this.languageTag = languageTag
+        }
     }
 
     private class FakeLaunchAtStartup : LaunchAtStartup {

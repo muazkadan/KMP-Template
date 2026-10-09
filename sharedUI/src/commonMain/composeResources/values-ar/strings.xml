@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">CMPTemplate</string>
+    <string name="home_title">الرئيسية</string>
+    <string name="settings_title">الإعدادات</string>
+    <string name="settings_theme">المظهر</string>
+    <string name="theme_system">افتراضي النظام</string>
+    <string name="theme_light">فاتح</string>
+    <string name="theme_dark">داكن</string>
+    <string name="settings_language">اللغة</string>
+    <string name="language_system">افتراضي النظام</string>
+    <string name="settings_startup">بدء تشغيل النظام</string>
+    <string name="settings_launch_at_startup">التشغيل عند بدء تشغيل النظام</string>
+    <string name="settings_start_minimized">البدء مخفيًا عند تسجيل الدخول</string>
+    <string name="settings_start_minimized_summary">تظهر أيقونة شريط النظام فقط حتى تفتح النافذة</string>
+
+    <!-- Desktop tray and menu bar -->
+    <string name="desktop_open_app">فتح</string>
+    <string name="desktop_hide_to_tray">إخفاء في شريط النظام</string>
+    <string name="desktop_menu_file">ملف</string>
+    <string name="desktop_menu_close_window">إغلاق النافذة</string>
+    <string name="desktop_quit">إنهاء</string>
+</resources>

@@ -51,4 +51,17 @@ class PreferencesManagerTest {
             assertEquals(true, preferencesManager.launchAtStartup.first())
             assertEquals(true, preferencesManager.startMinimized.first())
         }
+
+    @Test
+    fun appLanguageFollowsTheSystemUntilChosenAndAgainOnceCleared() =
+        runTest {
+            val preferencesManager = PreferencesManager(InMemoryPreferencesDataStore())
+            assertEquals(null, preferencesManager.appLanguage.first())
+
+            preferencesManager.setAppLanguage("ar")
+            assertEquals("ar", preferencesManager.appLanguage.first())
+
+            preferencesManager.setAppLanguage(null)
+            assertEquals(null, preferencesManager.appLanguage.first())
+        }
 }

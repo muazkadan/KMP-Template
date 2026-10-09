@@ -6,6 +6,8 @@
     <string name="theme_system">System default</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
+    <string name="settings_language">Language</string>
+    <string name="language_system">System default</string>
     <string name="settings_startup">System startup</string>
     <string name="settings_launch_at_startup">Launch at system startup</string>
     <string name="settings_start_minimized">Start hidden at login</string>

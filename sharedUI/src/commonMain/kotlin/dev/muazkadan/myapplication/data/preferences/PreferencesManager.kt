@@ -41,9 +41,20 @@ class PreferencesManager(
         dataStore.edit { it[START_MINIMIZED] = enabled }
     }
 
+    // The language chosen in the app, on desktop: Android keeps it per app itself. Null follows the
+    // system's language.
+    val appLanguage: Flow<String?> = dataStore.data.map { it[APP_LANGUAGE] }
+
+    suspend fun setAppLanguage(languageTag: String?) {
+        dataStore.edit {
+            if (languageTag == null) it.remove(APP_LANGUAGE) else it[APP_LANGUAGE] = languageTag
+        }
+    }
+
     private companion object {
         val THEME_MODE = stringPreferencesKey("theme_mode")
         val LAUNCH_AT_STARTUP = booleanPreferencesKey("launch_at_startup")
         val START_MINIMIZED = booleanPreferencesKey("start_minimized")
+        val APP_LANGUAGE = stringPreferencesKey("app_language")
     }
 }
