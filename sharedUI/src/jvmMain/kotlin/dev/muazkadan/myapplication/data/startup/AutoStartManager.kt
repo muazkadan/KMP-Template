@@ -1,5 +1,6 @@
 package dev.muazkadan.myapplication.data.startup
 
+import co.touchlab.kermit.Logger
 import dev.muazkadan.myapplication.DesktopAppData.APP_ID
 import dev.muazkadan.myapplication.DesktopAppData.APP_NAME
 import kotlinx.coroutines.Dispatchers
@@ -22,6 +23,8 @@ import java.util.concurrent.TimeUnit
  * app can tell a login from the user opening it.
  */
 object AutoStartManager : LaunchAtStartup {
+    private val log = Logger.withTag("AutoStartManager")
+
     const val AUTOSTART_ARG = "--autostart"
 
     private enum class Os { MAC, WINDOWS, LINUX, OTHER }
@@ -61,7 +64,11 @@ object AutoStartManager : LaunchAtStartup {
 
     private fun setEnabledBlocking(enabled: Boolean): Boolean {
         if (!enabled) return disable()
-        val executable = DesktopAppPathResolver.resolveExecutablePath() ?: return false
+        val executable = DesktopAppPathResolver.resolveExecutablePath()
+        if (executable == null) {
+            log.w { "No packaged launcher to start at login" }
+            return false
+        }
         return try {
             when (os) {
                 Os.MAC -> {
@@ -90,7 +97,8 @@ object AutoStartManager : LaunchAtStartup {
                     false
                 }
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            log.e(e) { "Could not turn on launch at login" }
             false
         }
     }
@@ -103,13 +111,15 @@ object AutoStartManager : LaunchAtStartup {
                 Os.LINUX -> !linuxAutostartFile.exists() || linuxAutostartFile.delete()
                 Os.OTHER -> true
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            log.e(e) { "Could not turn off launch at login" }
             false
         }
 
     private fun File.writeEntry(content: String): Boolean {
         parentFile?.mkdirs()
         writeText(content)
+        log.i { "Wrote autostart entry $absolutePath" }
         return true
     }
 
@@ -184,6 +194,7 @@ object AutoStartManager : LaunchAtStartup {
                 .start()
         if (!process.waitFor(10, TimeUnit.SECONDS)) {
             process.destroyForcibly()
+            log.w { "reg ${args.first()} timed out" }
             return false
         }
         return process.exitValue() == 0

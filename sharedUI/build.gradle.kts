@@ -55,6 +55,7 @@ kotlin {
 
             api(libs.kotlinx.serialization.core)
             api(libs.kotlinx.datetime)
+            api(libs.kermit)
 
             implementation(libs.datastore.preferences)
         }

@@ -1,5 +1,6 @@
 package dev.muazkadan.myapplication.desktopApp
 
+import co.touchlab.kermit.Logger
 import java.io.File
 import java.net.InetAddress
 import java.net.ServerSocket
@@ -17,6 +18,7 @@ import kotlin.concurrent.thread
 class SingleInstanceController(
     private val dataDir: File,
 ) {
+    private val log = Logger.withTag("SingleInstance")
     private val portFile = File(dataDir, "app.port")
     private var serverSocket: ServerSocket? = null
 
@@ -35,9 +37,11 @@ class SingleInstanceController(
                 socket.outputStream.write("$message\n".toByteArray(Charsets.UTF_8))
                 socket.outputStream.flush()
             }
+            log.i { "Handed $message to the instance running on port $port" }
             true
-        } catch (_: Exception) {
+        } catch (e: Exception) {
             // Left behind by an instance that didn't exit cleanly
+            log.d { "No instance on port $port, removing its port file: ${e.message}" }
             portFile.delete()
             false
         }
@@ -49,8 +53,9 @@ class SingleInstanceController(
         val server =
             try {
                 ServerSocket(0, 1, InetAddress.getLoopbackAddress())
-            } catch (_: Exception) {
+            } catch (e: Exception) {
                 // The app still runs; later launches just open a second instance
+                log.w(e) { "Could not listen for later launches" }
                 return
             }
         serverSocket = server
@@ -65,8 +70,9 @@ class SingleInstanceController(
                         val message = client.inputStream.bufferedReader().readLine()
                         if (message != null) SwingUtilities.invokeLater { onMessage(message) }
                     }
-                } catch (_: Exception) {
-                    // A client that hung up, or the server closing in stop()
+                } catch (e: Exception) {
+                    // Closing the server in stop() ends accept() with an exception too
+                    if (!server.isClosed) log.w(e) { "Could not read a later launch's message" }
                 }
             }
         }

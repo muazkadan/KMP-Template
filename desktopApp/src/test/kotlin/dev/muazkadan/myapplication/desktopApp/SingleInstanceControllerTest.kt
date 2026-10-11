@@ -1,5 +1,9 @@
 package dev.muazkadan.myapplication.desktopApp
 
+import co.touchlab.kermit.Logger
+import co.touchlab.kermit.Severity
+import co.touchlab.kermit.TestLogWriter
+import co.touchlab.kermit.platformLogWriter
 import java.io.File
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
@@ -41,9 +45,17 @@ class SingleInstanceControllerTest {
     fun portLeftByACrashedInstanceIsCleanedUp() {
         val port = java.net.ServerSocket(0).use { it.localPort }
         File(dataDir, "app.port").writeText(port.toString())
+        // Kermit's loggers share one configuration, so a test writer sees every tag's logs
+        val logs = TestLogWriter(Severity.Verbose)
+        Logger.setLogWriters(logs)
 
-        assertFalse(SingleInstanceController(dataDir).notifyExistingInstance())
-        assertFalse(File(dataDir, "app.port").exists())
+        try {
+            assertFalse(SingleInstanceController(dataDir).notifyExistingInstance())
+            assertFalse(File(dataDir, "app.port").exists())
+            logs.assertLast { tag == "SingleInstance" && message.startsWith("No instance on port $port") }
+        } finally {
+            Logger.setLogWriters(platformLogWriter())
+        }
     }
 
     @Test
