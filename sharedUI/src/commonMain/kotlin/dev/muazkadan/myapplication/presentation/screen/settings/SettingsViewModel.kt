@@ -4,6 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.muazkadan.myapplication.data.language.AppLanguageSetting
 import dev.muazkadan.myapplication.data.model.ThemeMode
+import dev.muazkadan.myapplication.data.notifications.Notification
+import dev.muazkadan.myapplication.data.notifications.NotificationAction
+import dev.muazkadan.myapplication.data.notifications.Notifier
 import dev.muazkadan.myapplication.data.preferences.PreferencesManager
 import dev.muazkadan.myapplication.data.startup.LaunchAtStartup
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,6 +22,8 @@ class SettingsViewModel(
     private val launchAtStartup: LaunchAtStartup?,
     // Null where the app can only follow the system's language
     private val appLanguageSetting: AppLanguageSetting?,
+    // Null where the app has no notifier of its own (Android and iOS)
+    private val notifier: Notifier?,
 ) : ViewModel() {
     val themeMode: StateFlow<ThemeMode> =
         preferencesManager.themeMode.stateIn(
@@ -60,6 +65,26 @@ class SettingsViewModel(
         _appLanguage.value = appLanguageSetting?.get()
     }
 
+    val isTestNotificationSupported: Boolean = notifier != null
+
+    /** A notification whose button opens Settings, which the desktop app handles ([OPEN_SETTINGS_ACTION]). */
+    fun sendTestNotification(
+        title: String,
+        message: String,
+        openSettingsLabel: String,
+    ) {
+        val notifier = notifier ?: return
+        viewModelScope.launch {
+            notifier.show(
+                Notification(
+                    title = title,
+                    message = message,
+                    action = NotificationAction(OPEN_SETTINGS_ACTION, openSettingsLabel),
+                ),
+            )
+        }
+    }
+
     fun setThemeMode(mode: ThemeMode) {
         viewModelScope.launch { preferencesManager.setThemeMode(mode) }
     }
@@ -76,5 +101,9 @@ class SettingsViewModel(
 
     fun setStartMinimized(enabled: Boolean) {
         viewModelScope.launch { preferencesManager.setStartMinimized(enabled) }
+    }
+
+    companion object {
+        const val OPEN_SETTINGS_ACTION = "open-settings"
     }
 }

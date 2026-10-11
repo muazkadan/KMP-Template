@@ -1,5 +1,6 @@
 package dev.muazkadan.myapplication.data.startup
 
+import dev.muazkadan.myapplication.DesktopAppData
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -23,7 +24,7 @@ class AutoStartManagerTest {
             """.trimMargin() in plist,
         )
         assertTrue("<key>RunAtLoad</key>\n    <true/>" in plist)
-        assertTrue("<key>AssociatedBundleIdentifiers</key>\n    <string>${AutoStartManager.APP_ID}</string>" in plist)
+        assertTrue("<key>AssociatedBundleIdentifiers</key>\n    <string>${DesktopAppData.APP_ID}</string>" in plist)
     }
 
     @Test

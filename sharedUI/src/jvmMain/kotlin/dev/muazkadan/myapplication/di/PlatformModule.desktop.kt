@@ -5,6 +5,8 @@ import androidx.datastore.preferences.core.Preferences
 import dev.muazkadan.myapplication.DesktopAppData
 import dev.muazkadan.myapplication.data.language.AppLanguageSetting
 import dev.muazkadan.myapplication.data.language.DesktopAppLanguage
+import dev.muazkadan.myapplication.data.notifications.DesktopNotifier
+import dev.muazkadan.myapplication.data.notifications.Notifier
 import dev.muazkadan.myapplication.data.preferences.DATA_STORE_FILE_NAME
 import dev.muazkadan.myapplication.data.preferences.createDataStore
 import dev.muazkadan.myapplication.data.startup.AutoStartManager
@@ -28,4 +30,5 @@ actual val platformModule: Module =
         }
         single<LaunchAtStartup> { AutoStartManager }
         singleOf(::DesktopAppLanguage) { bind<AppLanguageSetting>() }
+        single<Notifier> { DesktopNotifier }
     }

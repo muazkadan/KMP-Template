@@ -12,6 +12,7 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -28,11 +29,16 @@ import cmptemplate.sharedui.generated.resources.Res
 import cmptemplate.sharedui.generated.resources.language_system
 import cmptemplate.sharedui.generated.resources.settings_language
 import cmptemplate.sharedui.generated.resources.settings_launch_at_startup
+import cmptemplate.sharedui.generated.resources.settings_notifications
+import cmptemplate.sharedui.generated.resources.settings_send_test_notification
 import cmptemplate.sharedui.generated.resources.settings_start_minimized
 import cmptemplate.sharedui.generated.resources.settings_start_minimized_summary
 import cmptemplate.sharedui.generated.resources.settings_startup
 import cmptemplate.sharedui.generated.resources.settings_theme
 import cmptemplate.sharedui.generated.resources.settings_title
+import cmptemplate.sharedui.generated.resources.test_notification_message
+import cmptemplate.sharedui.generated.resources.test_notification_open_settings
+import cmptemplate.sharedui.generated.resources.test_notification_title
 import cmptemplate.sharedui.generated.resources.theme_dark
 import cmptemplate.sharedui.generated.resources.theme_light
 import cmptemplate.sharedui.generated.resources.theme_system
@@ -62,6 +68,8 @@ fun SettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
         appLanguage = appLanguage,
         isAppLanguageSupported = viewModel.isAppLanguageSupported,
         onAppLanguageChange = viewModel::setAppLanguage,
+        isTestNotificationSupported = viewModel.isTestNotificationSupported,
+        onSendTestNotification = viewModel::sendTestNotification,
         startup =
             if (viewModel.isLaunchAtStartupSupported) {
                 StartupSettings(launchAtStartup, startMinimized)
@@ -85,6 +93,8 @@ private fun SettingsContent(
     appLanguage: String?,
     isAppLanguageSupported: Boolean,
     onAppLanguageChange: (String?) -> Unit,
+    isTestNotificationSupported: Boolean,
+    onSendTestNotification: (title: String, message: String, openSettingsLabel: String) -> Unit,
     // Null where the platform can't start the app at login
     startup: StartupSettings?,
     onLaunchAtStartupChange: (Boolean) -> Unit,
@@ -130,6 +140,21 @@ private fun SettingsContent(
                         onClick = { onAppLanguageChange(language?.tag) },
                     )
                 }
+            }
+        }
+
+        if (isTestNotificationSupported) {
+            Text(
+                text = stringResource(Res.string.settings_notifications),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(top = 16.dp),
+            )
+            val title = stringResource(Res.string.test_notification_title)
+            val message = stringResource(Res.string.test_notification_message)
+            val openSettingsLabel = stringResource(Res.string.test_notification_open_settings)
+            OutlinedButton(onClick = { onSendTestNotification(title, message, openSettingsLabel) }) {
+                Text(stringResource(Res.string.settings_send_test_notification))
             }
         }
 
@@ -235,6 +260,8 @@ private fun SettingsContentPreview() {
             appLanguage = null,
             isAppLanguageSupported = true,
             onAppLanguageChange = {},
+            isTestNotificationSupported = true,
+            onSendTestNotification = { _, _, _ -> },
             startup = StartupSettings(launchAtStartup = true, startMinimized = false),
             onLaunchAtStartupChange = {},
             onStartMinimizedChange = {},

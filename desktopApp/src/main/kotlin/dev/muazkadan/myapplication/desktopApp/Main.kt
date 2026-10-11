@@ -35,10 +35,12 @@ import dev.muazkadan.myapplication.App
 import dev.muazkadan.myapplication.DesktopAppData
 import dev.muazkadan.myapplication.data.language.DesktopAppLanguage
 import dev.muazkadan.myapplication.data.model.ThemeMode
+import dev.muazkadan.myapplication.data.notifications.DesktopNotifier
 import dev.muazkadan.myapplication.data.preferences.PreferencesManager
 import dev.muazkadan.myapplication.data.startup.AutoStartManager
 import dev.muazkadan.myapplication.di.initKoin
 import dev.muazkadan.myapplication.presentation.navigation.Screen
+import dev.muazkadan.myapplication.presentation.screen.settings.SettingsViewModel
 import dev.nucleusframework.composenativetray.tray.api.Tray
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
@@ -56,8 +58,10 @@ import java.util.Locale
 private val isMac = System.getProperty("os.name", "").lowercase().contains("mac")
 
 fun main(args: Array<String>) {
+    // A click on a Windows notification starts the app with the notification's URL
+    val notificationUrl = args.firstOrNull { DesktopNotifier.actionFromUrl(it) != null }
     val singleInstance = SingleInstanceController(DesktopAppData.dir)
-    if (singleInstance.notifyExistingInstance()) return
+    if (singleInstance.notifyExistingInstance(notificationUrl ?: SingleInstanceController.RESTORE)) return
 
     val koin = initKoin().koin
     val preferencesManager = koin.get<PreferencesManager>()
@@ -86,10 +90,36 @@ fun main(args: Array<String>) {
             restoreRequests++
         }
 
+        // Kept out of the key(languageTag) below, so a change of language leaves the user on the same
+        // screen, and here so a notification's button can open a screen
+        val backStack =
+            rememberSerializable(serializer = NavBackStackSerializer(Screen.serializer())) {
+                NavBackStack<Screen>(Screen.Splash)
+            }
+
         DisposableEffect(Unit) {
             singleInstance.startListener { message ->
-                if (message == SingleInstanceController.RESTORE) restoreWindow()
+                if (message == SingleInstanceController.RESTORE) restoreWindow() else DesktopNotifier.handleUrl(message)
             }
+
+            val notificationListener = { action: String ->
+                when (action) {
+                    DesktopNotifier.OPEN_ACTION -> {
+                        restoreWindow()
+                    }
+
+                    SettingsViewModel.OPEN_SETTINGS_ACTION -> {
+                        restoreWindow()
+                        // Still starting: the splash moves on to Home by itself
+                        if (Screen.Splash !in backStack && backStack.lastOrNull() != Screen.Settings) {
+                            backStack.add(Screen.Settings)
+                        }
+                    }
+                }
+            }
+            DesktopNotifier.addActionListener(notificationListener)
+            // The app was started by a click on a notification
+            notificationUrl?.let(DesktopNotifier::handleUrl)
 
             // A click on the Dock icon brings a hidden window back on macOS
             val reopenedListener = AppReopenedListener { restoreWindow() }
@@ -103,8 +133,14 @@ fun main(args: Array<String>) {
 
             onDispose {
                 desktop?.removeAppEventListener(reopenedListener)
+                DesktopNotifier.removeActionListener(notificationListener)
                 singleInstance.stop()
             }
+        }
+
+        LaunchedEffect(Unit) {
+            // Windows shows toasts only for an app registered with it
+            DesktopNotifier.registerWithSystem()
         }
 
         LaunchedEffect(Unit) {
@@ -180,12 +216,6 @@ fun main(args: Array<String>) {
                     window.requestFocus()
                 }
             }
-
-            // Kept out of the key below, so a change of language leaves the user on the same screen
-            val backStack =
-                rememberSerializable(serializer = NavBackStackSerializer(Screen.serializer())) {
-                    NavBackStack<Screen>(Screen.Splash)
-                }
 
             // Strings are looked up as the content is composed, so a new language composes all of it
             // anew, the window's menus with it
