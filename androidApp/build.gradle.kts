@@ -39,6 +39,11 @@ android {
         }
     }
 
+    testOptions {
+        // Robolectric reads the merged resources and assets, Compose resources' strings among them
+        unitTests.isIncludeAndroidResources = true
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -53,4 +58,9 @@ dependencies {
     implementation(project(":sharedUI"))
     implementation(libs.androidx.activityCompose)
     implementation(libs.koin.android)
+
+    testImplementation(libs.junit)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.compose.ui.test.junit4)
 }

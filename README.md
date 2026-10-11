@@ -87,6 +87,11 @@ and the desktop app's own tests:
 ```bash
 ./gradlew :desktopApp:test
 ```
+Android-specific code runs on the JVM with [Robolectric](https://robolectric.org/), no emulator needed: `androidApp/src/test` launches the real `MainActivity` and checks Android 13's per-app language.
+```bash
+./gradlew :androidApp:testDebugUnitTest
+```
+Tests run on Android 15 (API 35) unless they say otherwise (`androidApp/src/test/resources/robolectric.properties`); `@Config(sdk = [...])` picks another version for one test.
 
 ## Learn More
 
