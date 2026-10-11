@@ -109,6 +109,23 @@ compose.desktop {
             macOS {
                 iconFile.set(project.file("appIcons/MacosIcon.icns"))
                 bundleID = "dev.muazkadan.myapplication.desktopApp"
+                infoPlist {
+                    // Deep links, cmptemplate://nav/<screen>: the scheme is DeepLinks.SCHEME in sharedUI
+                    extraKeysRawXml =
+                        """
+                        <key>CFBundleURLTypes</key>
+                        <array>
+                            <dict>
+                                <key>CFBundleURLName</key>
+                                <string>dev.muazkadan.myapplication.desktopApp</string>
+                                <key>CFBundleURLSchemes</key>
+                                <array>
+                                    <string>cmptemplate</string>
+                                </array>
+                            </dict>
+                        </array>
+                        """.trimIndent()
+                }
             }
         }
     }

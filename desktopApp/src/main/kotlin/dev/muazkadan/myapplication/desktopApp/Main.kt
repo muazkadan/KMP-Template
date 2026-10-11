@@ -39,6 +39,8 @@ import dev.muazkadan.myapplication.data.notifications.DesktopNotifier
 import dev.muazkadan.myapplication.data.preferences.PreferencesManager
 import dev.muazkadan.myapplication.data.startup.AutoStartManager
 import dev.muazkadan.myapplication.di.initKoin
+import dev.muazkadan.myapplication.presentation.navigation.DeepLinks
+import dev.muazkadan.myapplication.presentation.navigation.ExternalNavigator
 import dev.muazkadan.myapplication.presentation.navigation.Screen
 import dev.muazkadan.myapplication.presentation.screen.settings.SettingsViewModel
 import dev.nucleusframework.composenativetray.tray.api.Tray
@@ -54,17 +56,20 @@ import java.awt.Desktop
 import java.awt.Dimension
 import java.awt.desktop.AppReopenedListener
 import java.util.Locale
+import javax.swing.SwingUtilities
 
 private val isMac = System.getProperty("os.name", "").lowercase().contains("mac")
 
 fun main(args: Array<String>) {
-    // A click on a Windows notification starts the app with the notification's URL
-    val notificationUrl = args.firstOrNull { DesktopNotifier.actionFromUrl(it) != null }
+    // On Windows, a deep link or a click on a notification starts the app with its URL. macOS hands
+    // URLs to the running app instead (setOpenURIHandler below)
+    val launchUrl = args.firstOrNull { DeepLinks.parse(it) != null || DesktopNotifier.actionFromUrl(it) != null }
     val singleInstance = SingleInstanceController(DesktopAppData.dir)
-    if (singleInstance.notifyExistingInstance(notificationUrl ?: SingleInstanceController.RESTORE)) return
+    if (singleInstance.notifyExistingInstance(launchUrl ?: SingleInstanceController.RESTORE)) return
 
     val koin = initKoin().koin
     val preferencesManager = koin.get<PreferencesManager>()
+    val externalNavigator = koin.get<ExternalNavigator>()
     val appLanguage = koin.get<DesktopAppLanguage>()
     // Before anything is looked up or put on screen, so all of it starts in the app's language
     runBlocking { appLanguage.restore() }
@@ -91,35 +96,34 @@ fun main(args: Array<String>) {
         }
 
         // Kept out of the key(languageTag) below, so a change of language leaves the user on the same
-        // screen, and here so a notification's button can open a screen
+        // screen
         val backStack =
             rememberSerializable(serializer = NavBackStackSerializer(Screen.serializer())) {
                 NavBackStack<Screen>(Screen.Splash)
             }
 
         DisposableEffect(Unit) {
+            fun openDeepLink(uri: String) {
+                if (externalNavigator.onDeepLink(uri)) restoreWindow()
+            }
+
             singleInstance.startListener { message ->
-                if (message == SingleInstanceController.RESTORE) restoreWindow() else DesktopNotifier.handleUrl(message)
+                when {
+                    message == SingleInstanceController.RESTORE -> restoreWindow()
+                    DeepLinks.parse(message) != null -> openDeepLink(message)
+                    else -> DesktopNotifier.handleUrl(message)
+                }
             }
 
             val notificationListener = { action: String ->
                 when (action) {
-                    DesktopNotifier.OPEN_ACTION -> {
-                        restoreWindow()
-                    }
-
-                    SettingsViewModel.OPEN_SETTINGS_ACTION -> {
-                        restoreWindow()
-                        // Still starting: the splash moves on to Home by itself
-                        if (Screen.Splash !in backStack && backStack.lastOrNull() != Screen.Settings) {
-                            backStack.add(Screen.Settings)
-                        }
-                    }
+                    DesktopNotifier.OPEN_ACTION -> restoreWindow()
+                    SettingsViewModel.OPEN_SETTINGS_ACTION -> openDeepLink(DeepLinks.SETTINGS)
                 }
             }
             DesktopNotifier.addActionListener(notificationListener)
-            // The app was started by a click on a notification
-            notificationUrl?.let(DesktopNotifier::handleUrl)
+            // The app was started with a URL
+            launchUrl?.let { if (!externalNavigator.onDeepLink(it)) DesktopNotifier.handleUrl(it) }
 
             // A click on the Dock icon brings a hidden window back on macOS
             val reopenedListener = AppReopenedListener { restoreWindow() }
@@ -130,6 +134,14 @@ fun main(args: Array<String>) {
                     null
                 }
             desktop?.addAppEventListener(reopenedListener)
+
+            // macOS opens deep links through the app's URL type (desktopApp's infoPlist), in the
+            // running app or one it starts for them. AWT queues a URL that comes before this is set
+            if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.APP_OPEN_URI)) {
+                Desktop.getDesktop().setOpenURIHandler { event ->
+                    SwingUtilities.invokeLater { openDeepLink(event.uri.toString()) }
+                }
+            }
 
             onDispose {
                 desktop?.removeAppEventListener(reopenedListener)

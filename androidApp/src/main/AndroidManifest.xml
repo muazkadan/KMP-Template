@@ -20,6 +20,15 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- Deep links, cmptemplate://nav/<screen> (DeepLinks in sharedUI) -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:host="nav"
+                    android:scheme="cmptemplate" />
+            </intent-filter>
         </activity>
     </application>
 

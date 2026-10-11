@@ -1,6 +1,7 @@
 package dev.muazkadan.myapplication.di
 
 import dev.muazkadan.myapplication.data.preferences.PreferencesManager
+import dev.muazkadan.myapplication.presentation.navigation.ExternalNavigator
 import dev.muazkadan.myapplication.presentation.screen.settings.SettingsViewModel
 import dev.muazkadan.myapplication.presentation.screen.splash.SplashViewModel
 import kotlinx.datetime.TimeZone
@@ -18,6 +19,7 @@ val appModule =
         single<TimeZone> { TimeZone.currentSystemDefault() }
 
         singleOf(::PreferencesManager)
+        singleOf(::ExternalNavigator)
 
         viewModelOf(::SplashViewModel)
         // getOrNull: LaunchAtStartup and Notifier are bound only on desktop, AppLanguageSetting only
