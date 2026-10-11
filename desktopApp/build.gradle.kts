@@ -95,6 +95,11 @@ compose.desktop {
             packageName = "CMPTemplate"
             packageVersion = "1.0.0"
 
+            // The JDK modules the packaged app's runtime includes beyond Compose's defaults, from
+            // ./gradlew :desktopApp:suggestRuntimeModules. Without jdk.unsupported the packaged app
+            // fails at startup with NoClassDefFoundError: sun/misc/Unsafe
+            modules("java.instrument", "java.prefs", "jdk.unsupported")
+
             linux {
                 iconFile.set(project.file("appIcons/LinuxIcon.png"))
             }
