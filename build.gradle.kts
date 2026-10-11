@@ -8,7 +8,6 @@ plugins {
     alias(libs.plugins.android.kmp.library).apply(false)
     alias(libs.plugins.kotlin.jvm).apply(false)
     alias(libs.plugins.kotlinxSerialization).apply(false)
-    alias(libs.plugins.composeHotReload).apply(false)
     alias(libs.plugins.ktlint).apply(false)
 }
 

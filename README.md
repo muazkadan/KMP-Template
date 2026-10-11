@@ -47,6 +47,7 @@ Run with [Compose Hot Reload](https://github.com/JetBrains/compose-hot-reload) e
 ```bash
 ./gradlew :desktopApp:hotRun --auto
 ```
+Coding agents can drive the hot-reloaded app through Compose Hot Reload's MCP server, which `.mcp.json` registers (`:desktopApp:hotMcpServer`): it connects to an app started with `hotRun`, and can take screenshots, read the semantic tree, click and scroll.
 
 ### iOS
 Open `iosApp/iosApp.xcodeproj` in Xcode and run standard configuration.
