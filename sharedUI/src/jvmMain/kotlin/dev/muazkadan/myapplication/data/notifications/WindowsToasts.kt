@@ -1,5 +1,6 @@
 package dev.muazkadan.myapplication.data.notifications
 
+import co.touchlab.kermit.Logger
 import dev.muazkadan.myapplication.DesktopAppData
 import java.io.File
 import java.nio.charset.StandardCharsets
@@ -20,6 +21,8 @@ import java.util.concurrent.TimeUnit
  * AppUserModelID that isn't registered would be dropped by Windows without an error.
  */
 internal object WindowsToasts {
+    private val log = Logger.withTag("WindowsToasts")
+
     // Shipped in the app's resources by desktopApp's copyWindowsNotificationIcon
     private const val NOTIFICATION_ICON = "notification_icon.png"
 
@@ -58,6 +61,11 @@ internal object WindowsToasts {
                 protocolOpenCommand(executablePath),
                 "/f",
             )
+        if (registered) {
+            log.i { "Registered Windows toast notifications for $executablePath" }
+        } else {
+            log.w { "Could not register Windows toast notifications, falling back to tray balloons" }
+        }
         return registered
     }
 
@@ -77,11 +85,15 @@ internal object WindowsToasts {
             }
             if (!process.waitFor(10, TimeUnit.SECONDS)) {
                 process.destroyForcibly()
+                log.w { "Windows toast notification timed out" }
                 false
             } else {
-                process.exitValue() == 0
+                (process.exitValue() == 0).also { shown ->
+                    if (!shown) log.w { "Windows toast notification exited with code ${process.exitValue()}" }
+                }
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            log.w(e) { "Windows toast notification failed" }
             false
         }
     }
@@ -146,11 +158,13 @@ internal object WindowsToasts {
                     .start()
             if (!process.waitFor(10, TimeUnit.SECONDS)) {
                 process.destroyForcibly()
+                log.w { "reg ${args.first()} timed out" }
                 false
             } else {
                 process.exitValue() == 0
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            log.w(e) { "reg ${args.first()} failed" }
             false
         }
 

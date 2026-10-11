@@ -12,6 +12,7 @@ dependencies {
     implementation(libs.composeNativeTray)
 
     testImplementation(libs.kotlin.test)
+    testImplementation(libs.kermit.test)
 }
 
 // The JNI library behind MacOsNotificationBridge (sharedUI), a universal binary. It goes in the

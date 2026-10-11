@@ -1,5 +1,6 @@
 package dev.muazkadan.myapplication.data.notifications
 
+import co.touchlab.kermit.Logger
 import dev.muazkadan.myapplication.DesktopAppData
 import dev.muazkadan.myapplication.data.startup.DesktopAppPathResolver
 import kotlinx.coroutines.Dispatchers
@@ -24,6 +25,8 @@ import javax.swing.SwingUtilities
  * click starts the app with a URL ([urlFor]), which the desktop app hands to [handleUrl].
  */
 object DesktopNotifier : Notifier {
+    private val log = Logger.withTag("DesktopNotifier")
+
     /** What a click on the notification itself reports. */
     const val OPEN_ACTION = "open"
 
@@ -121,7 +124,13 @@ object DesktopNotifier : Notifier {
 
     internal fun dispatchAction(action: String) {
         SwingUtilities.invokeLater {
-            actionListeners.forEach { listener -> runCatching { listener(action) } }
+            actionListeners.forEach { listener ->
+                try {
+                    listener(action)
+                } catch (e: Exception) {
+                    log.e(e) { "Notification action listener failed for $action" }
+                }
+            }
         }
     }
 
@@ -135,7 +144,8 @@ object DesktopNotifier : Notifier {
                 .redirectOutput(ProcessBuilder.Redirect.DISCARD)
                 .start()
             true
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            log.w(e) { "osascript could not be run" }
             false
         }
     }
@@ -149,8 +159,8 @@ object DesktopNotifier : Notifier {
                     ?: TrayIcon(BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB), DesktopAppData.APP_NAME).also(tray::add)
             trayIcon.displayMessage(notification.title, notification.message, TrayIcon.MessageType.INFO)
             if (notification.withSound) Toolkit.getDefaultToolkit().beep()
-        } catch (_: Exception) {
-            // Nowhere left to show it
+        } catch (e: Exception) {
+            log.w(e) { "No tray to show the notification in" }
         }
     }
 }

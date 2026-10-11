@@ -22,6 +22,7 @@ A modern Kotlin Multiplatform project template with Compose Multiplatform target
 - kotlinx.serialization
 - Compose Hot Reload (Desktop)
 - Lifecycle ViewModel
+- Kermit (logging)
 - DataStore Preferences (settings storage)
 - kotlinx-datetime
 - ktlint
@@ -64,6 +65,7 @@ The template calls library APIs directly instead of wrapping them in its own hel
 - **App language** - Settings → Language picks one of the app's translations, or follows the system. On Android 13+ it's the system's per-app language (also in Settings → Apps → Language); on desktop the app stores it and switches without a restart, right-to-left included. Arabic is included as an example translation. To add a language, add `composeResources/values-<tag>/strings.xml`, an entry in `appLanguages`, and a `<locale>` in `androidApp/src/main/res/xml/locales_config.xml`; `AppLanguagesTest` fails if they disagree.
 - **Desktop notifications** - `Notifier` shows a notification the way each system does its own: macOS's UserNotifications through a small JNI library (`desktopApp/src/main/native`, built by `compileMacOsNotifications` into the packaged app), `notify-send` on Linux, and toasts on Windows, registered with the system at startup. A click opens the app, and a notification can have a button whose ID reaches `DesktopNotifier.addActionListener` (Linux and Windows; macOS notifications have none). On Windows the click starts the app with a `cmptemplate://` URL, which `SingleInstanceController` hands to the running app. The native macOS notifications and Windows toasts need the packaged app (`./gradlew :desktopApp:createDistributable`); `./gradlew run` falls back to osascript on macOS and tray balloons on Windows. Settings → Notifications sends a test one, whose button opens Settings.
 - **Launch at login** - Settings → System startup can start the desktop app when the user logs in (a LaunchAgent on macOS, the Run registry key on Windows, an XDG autostart entry on Linux), optionally hidden in the tray. It only shows in a packaged app (`./gradlew :desktopApp:createDistributable`): `./gradlew run` has no launcher for the system to start. `--minimized` and `--show` override it from the command line. Rename the app's ID, name and URL scheme in `DesktopAppData` with the app.
+- **Logging** - [Kermit](https://kermit.touchlab.co/): `Logger.withTag("Tag").w { "..." }` writes to Logcat on Android, OSLog on iOS and the console on desktop. The desktop integrations log their failures (a launch-at-login entry that couldn't be written, a notification that couldn't be shown). `kermit-test`'s `TestLogWriter` checks what was logged (`SingleInstanceControllerTest`).
 - **Test fake** - `InMemoryPreferencesDataStore`, a `DataStore` kept in memory for DataStore-backed code in `commonTest`.
 
 ## Code Style

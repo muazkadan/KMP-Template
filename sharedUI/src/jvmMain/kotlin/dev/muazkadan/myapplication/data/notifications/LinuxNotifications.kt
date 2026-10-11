@@ -1,5 +1,6 @@
 package dev.muazkadan.myapplication.data.notifications
 
+import co.touchlab.kermit.Logger
 import dev.muazkadan.myapplication.DesktopAppData
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
@@ -12,6 +13,8 @@ import kotlin.concurrent.thread
  * button's ID.
  */
 internal object LinuxNotifications {
+    private val log = Logger.withTag("LinuxNotifications")
+
     // The one a click on the notification itself invokes; servers don't show it as a button
     const val ACTION_DEFAULT = "default"
 
@@ -59,7 +62,8 @@ internal object LinuxNotifications {
                     .redirectError(ProcessBuilder.Redirect.DISCARD)
                     .apply { if (!interactive) redirectOutput(ProcessBuilder.Redirect.DISCARD) }
                     .start()
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                log.w(e) { "notify-send could not be run" }
                 return false
             }
         if (interactive) {
@@ -71,7 +75,8 @@ internal object LinuxNotifications {
                             .bufferedReader()
                             .use { it.readLine() }
                             ?.trim()
-                    } catch (_: Exception) {
+                    } catch (e: Exception) {
+                        log.w(e) { "Could not read the notification's action" }
                         null
                     }
                 process.waitFor()

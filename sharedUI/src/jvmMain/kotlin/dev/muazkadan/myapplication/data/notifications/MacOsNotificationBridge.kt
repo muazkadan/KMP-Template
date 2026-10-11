@@ -1,5 +1,6 @@
 package dev.muazkadan.myapplication.data.notifications
 
+import co.touchlab.kermit.Logger
 import java.io.File
 
 /**
@@ -12,6 +13,7 @@ import java.io.File
  * other systems, `./gradlew run`, hot reload - and [DesktopNotifier] falls back to osascript.
  */
 internal object MacOsNotificationBridge {
+    private val log = Logger.withTag("MacOsNotificationBridge")
     private const val LIBRARY_FILE = "libmacos_notifications.dylib"
 
     val isAvailable: Boolean by lazy { load() }
@@ -26,9 +28,15 @@ internal object MacOsNotificationBridge {
                 ?: return false
         return try {
             System.load(library.absolutePath)
-            // False when not running from an app bundle
-            nativeInit()
-        } catch (_: Throwable) {
+            nativeInit().also { initialized ->
+                if (initialized) {
+                    log.i { "Native macOS notifications ready" }
+                } else {
+                    log.d { "Not running from an app bundle, native macOS notifications are off" }
+                }
+            }
+        } catch (e: Throwable) {
+            log.w(e) { "Native macOS notifications could not be loaded" }
             false
         }
     }
@@ -43,7 +51,8 @@ internal object MacOsNotificationBridge {
         return try {
             nativePostNotification(title, message, withSound)
             true
-        } catch (_: Throwable) {
+        } catch (e: Throwable) {
+            log.w(e) { "Native macOS notification failed" }
             false
         }
     }
