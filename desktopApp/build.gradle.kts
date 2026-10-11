@@ -23,40 +23,50 @@ val compileMacOsNotifications =
         description = "Compiles the native macOS notification library."
         val source = file("src/main/native/MacOsNotifications.m")
         val output = appResourcesDir.get().file("macos/libmacos_notifications.dylib").asFile
-        val jniHeaders = providers.systemProperty("java.home").map { File(it, "include") }
         // Read here rather than in onlyIf, which the configuration cache can't serialize a reference
         // to the build script from
         val isMac = providers.systemProperty("os.name").get().startsWith("Mac")
         inputs.file(source)
         outputs.file(output)
         onlyIf { isMac }
-        doFirst { output.parentFile.mkdirs() }
-        commandLine(
-            "xcrun",
-            "clang",
-            "-dynamiclib",
-            "-arch",
-            "arm64",
-            "-arch",
-            "x86_64",
-            // The presentation options it asks for arrived in macOS 11
-            "-mmacosx-version-min=11.0",
-            "-O2",
-            "-fobjc-arc",
-            "-Wall",
-            "-Werror",
-            "-I",
-            jniHeaders.get().path,
-            "-I",
-            jniHeaders.get().resolve("darwin").path,
-            "-framework",
-            "Cocoa",
-            "-framework",
-            "UserNotifications",
-            source.path,
-            "-o",
-            output.path,
-        )
+        if (isMac) {
+            // The JNI headers come from a JDK toolchain, not from the JVM running Gradle: Android
+            // Studio runs Gradle on its own runtime, which has no include directory
+            val jniHeaders =
+                javaToolchains
+                    .compilerFor { languageVersion.set(JavaLanguageVersion.of(17)) }
+                    .get()
+                    .metadata.installationPath
+                    .dir("include")
+                    .asFile
+            doFirst { output.parentFile.mkdirs() }
+            commandLine(
+                "xcrun",
+                "clang",
+                "-dynamiclib",
+                "-arch",
+                "arm64",
+                "-arch",
+                "x86_64",
+                // The presentation options it asks for arrived in macOS 11
+                "-mmacosx-version-min=11.0",
+                "-O2",
+                "-fobjc-arc",
+                "-Wall",
+                "-Werror",
+                "-I",
+                jniHeaders.path,
+                "-I",
+                jniHeaders.resolve("darwin").path,
+                "-framework",
+                "Cocoa",
+                "-framework",
+                "UserNotifications",
+                source.path,
+                "-o",
+                output.path,
+            )
+        }
     }
 
 // The icon of the app's Windows toasts (WindowsToasts in sharedUI): Windows takes it from a file
