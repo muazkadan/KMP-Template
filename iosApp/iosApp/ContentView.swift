@@ -14,6 +14,10 @@ struct ContentView: View {
     var body: some View {
         ComposeView()
                 .ignoresSafeArea(.keyboard) // Compose has own keyboard handler
+                // Deep links, cmptemplate://nav/<screen> (DeepLinks in sharedUI)
+                .onOpenURL { url in
+                    MainViewControllerKt.handleDeepLink(uri: url.absoluteString)
+                }
     }
 }
 

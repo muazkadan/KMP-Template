@@ -95,6 +95,11 @@ compose.desktop {
             packageName = "CMPTemplate"
             packageVersion = "1.0.0"
 
+            // The JDK modules the packaged app's runtime includes beyond Compose's defaults, from
+            // ./gradlew :desktopApp:suggestRuntimeModules. Without jdk.unsupported the packaged app
+            // fails at startup with NoClassDefFoundError: sun/misc/Unsafe
+            modules("java.instrument", "java.prefs", "jdk.unsupported")
+
             linux {
                 iconFile.set(project.file("appIcons/LinuxIcon.png"))
             }
@@ -104,6 +109,23 @@ compose.desktop {
             macOS {
                 iconFile.set(project.file("appIcons/MacosIcon.icns"))
                 bundleID = "dev.muazkadan.myapplication.desktopApp"
+                infoPlist {
+                    // Deep links, cmptemplate://nav/<screen>: the scheme is DeepLinks.SCHEME in sharedUI
+                    extraKeysRawXml =
+                        """
+                        <key>CFBundleURLTypes</key>
+                        <array>
+                            <dict>
+                                <key>CFBundleURLName</key>
+                                <string>dev.muazkadan.myapplication.desktopApp</string>
+                                <key>CFBundleURLSchemes</key>
+                                <array>
+                                    <string>cmptemplate</string>
+                                </array>
+                            </dict>
+                        </array>
+                        """.trimIndent()
+                }
             }
         }
     }

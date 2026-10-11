@@ -1,5 +1,6 @@
 package dev.muazkadan.myapplication
 
+import dev.muazkadan.myapplication.presentation.navigation.DeepLinks
 import java.io.File
 
 /** The desktop app's identity and where it keeps its files. Rename these with the app. */
@@ -11,8 +12,8 @@ object DesktopAppData {
     // packageName in desktopApp/build.gradle.kts: the launcher's name, and how the system lists the app
     const val APP_NAME = "CMPTemplate"
 
-    // The URL scheme Windows notifications' clicks start the app with (cmptemplate://...)
-    const val URL_SCHEME = "cmptemplate"
+    // The app's URL scheme (cmptemplate://...), for deep links and Windows notifications' clicks
+    const val URL_SCHEME = DeepLinks.SCHEME
 
     // Under the user's home directory: settings, and the single-instance port
     private const val DIR_NAME = ".cmptemplate"
