@@ -20,7 +20,7 @@ val appModule =
         singleOf(::PreferencesManager)
 
         viewModelOf(::SplashViewModel)
-        // getOrNull: LaunchAtStartup is bound only on desktop, AppLanguageSetting only where the
-        // app can choose its own language
-        viewModel { SettingsViewModel(get(), getOrNull(), getOrNull()) }
+        // getOrNull: LaunchAtStartup and Notifier are bound only on desktop, AppLanguageSetting only
+        // where the app can choose its own language
+        viewModel { SettingsViewModel(get(), getOrNull(), getOrNull(), getOrNull()) }
     }

@@ -2,6 +2,9 @@ package dev.muazkadan.myapplication.presentation.screen.settings
 
 import dev.muazkadan.myapplication.data.language.AppLanguageSetting
 import dev.muazkadan.myapplication.data.model.ThemeMode
+import dev.muazkadan.myapplication.data.notifications.Notification
+import dev.muazkadan.myapplication.data.notifications.NotificationAction
+import dev.muazkadan.myapplication.data.notifications.Notifier
 import dev.muazkadan.myapplication.data.preferences.PreferencesManager
 import dev.muazkadan.myapplication.data.startup.LaunchAtStartup
 import dev.muazkadan.myapplication.testing.InMemoryPreferencesDataStore
@@ -28,11 +31,12 @@ class SettingsViewModelTest {
 
     private val launchAtStartup = FakeLaunchAtStartup()
     private val appLanguageSetting = FakeAppLanguageSetting()
+    private val notifier = FakeNotifier()
 
     @BeforeTest
     fun setUp() {
         Dispatchers.setMain(UnconfinedTestDispatcher())
-        viewModel = SettingsViewModel(preferencesManager, launchAtStartup, appLanguageSetting)
+        viewModel = SettingsViewModel(preferencesManager, launchAtStartup, appLanguageSetting, notifier)
     }
 
     @AfterTest
@@ -84,7 +88,14 @@ class SettingsViewModelTest {
     @Test
     fun withoutLaunchAtStartupTheSettingIsHidden() {
         assertTrue(viewModel.isLaunchAtStartupSupported)
-        assertFalse(SettingsViewModel(preferencesManager, launchAtStartup = null, appLanguageSetting = null).isLaunchAtStartupSupported)
+        assertFalse(
+            SettingsViewModel(
+                preferencesManager,
+                launchAtStartup = null,
+                appLanguageSetting = null,
+                notifier = null,
+            ).isLaunchAtStartupSupported,
+        )
     }
 
     @Test
@@ -107,7 +118,39 @@ class SettingsViewModelTest {
     @Test
     fun withoutAppLanguageSettingTheLanguageIsHidden() {
         assertTrue(viewModel.isAppLanguageSupported)
-        assertFalse(SettingsViewModel(preferencesManager, launchAtStartup, appLanguageSetting = null).isAppLanguageSupported)
+        assertFalse(SettingsViewModel(preferencesManager, launchAtStartup, appLanguageSetting = null, notifier).isAppLanguageSupported)
+    }
+
+    @Test
+    fun testNotificationHasAButtonThatOpensSettings() =
+        runTest {
+            viewModel.sendTestNotification("Title", "Message", "Open settings")
+            advanceUntilIdle()
+
+            assertEquals(
+                listOf(
+                    Notification(
+                        title = "Title",
+                        message = "Message",
+                        action = NotificationAction(SettingsViewModel.OPEN_SETTINGS_ACTION, "Open settings"),
+                    ),
+                ),
+                notifier.shown,
+            )
+        }
+
+    @Test
+    fun withoutNotifierTheTestNotificationIsHidden() {
+        assertTrue(viewModel.isTestNotificationSupported)
+        assertFalse(SettingsViewModel(preferencesManager, launchAtStartup, appLanguageSetting, notifier = null).isTestNotificationSupported)
+    }
+
+    private class FakeNotifier : Notifier {
+        val shown = mutableListOf<Notification>()
+
+        override suspend fun show(notification: Notification) {
+            shown += notification
+        }
     }
 
     private class FakeAppLanguageSetting : AppLanguageSetting {

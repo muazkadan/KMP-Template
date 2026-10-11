@@ -8,6 +8,11 @@
     <string name="theme_dark">داكن</string>
     <string name="settings_language">اللغة</string>
     <string name="language_system">افتراضي النظام</string>
+    <string name="settings_notifications">الإشعارات</string>
+    <string name="settings_send_test_notification">إرسال إشعار تجريبي</string>
+    <string name="test_notification_title">إشعار تجريبي</string>
+    <string name="test_notification_message">انقر عليه لفتح التطبيق.</string>
+    <string name="test_notification_open_settings">فتح الإعدادات</string>
     <string name="settings_startup">بدء تشغيل النظام</string>
     <string name="settings_launch_at_startup">التشغيل عند بدء تشغيل النظام</string>
     <string name="settings_start_minimized">البدء مخفيًا عند تسجيل الدخول</string>

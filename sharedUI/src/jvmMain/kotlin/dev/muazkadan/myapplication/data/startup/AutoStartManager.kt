@@ -1,5 +1,7 @@
 package dev.muazkadan.myapplication.data.startup
 
+import dev.muazkadan.myapplication.DesktopAppData.APP_ID
+import dev.muazkadan.myapplication.DesktopAppData.APP_NAME
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -20,11 +22,6 @@ import java.util.concurrent.TimeUnit
  * app can tell a login from the user opening it.
  */
 object AutoStartManager : LaunchAtStartup {
-    // The macOS bundle ID (bundleID in desktopApp/build.gradle.kts) and the app's name
-    // (packageName there). Rename them with the app.
-    const val APP_ID = "dev.muazkadan.myapplication.desktopApp"
-    private const val APP_NAME = "CMPTemplate"
-
     const val AUTOSTART_ARG = "--autostart"
 
     private enum class Os { MAC, WINDOWS, LINUX, OTHER }
