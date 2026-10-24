@@ -97,8 +97,10 @@ compose.desktop {
 
             // The JDK modules the packaged app's runtime includes beyond Compose's defaults, from
             // ./gradlew :desktopApp:suggestRuntimeModules. Without jdk.unsupported the packaged app
-            // fails at startup with NoClassDefFoundError: sun/misc/Unsafe
-            modules("java.instrument", "java.prefs", "jdk.unsupported")
+            // fails at startup with NoClassDefFoundError: sun/misc/Unsafe. suggestRuntimeModules
+            // misses jdk.crypto.ec, which HTTPS needs: up to JDK 21 the elliptic-curve ciphers are
+            // in that module, and CI packages with JDK 17
+            modules("java.instrument", "java.prefs", "jdk.unsupported", "jdk.crypto.ec")
 
             linux {
                 iconFile.set(project.file("appIcons/LinuxIcon.png"))
