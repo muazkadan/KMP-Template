@@ -5,8 +5,11 @@ import co.touchlab.kermit.Severity
 import co.touchlab.kermit.TestLogWriter
 import co.touchlab.kermit.platformLogWriter
 import java.io.File
+import java.net.InetAddress
+import java.net.ServerSocket
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
+import kotlin.concurrent.thread
 import kotlin.io.path.createTempDirectory
 import kotlin.test.AfterTest
 import kotlin.test.Test
@@ -55,6 +58,26 @@ class SingleInstanceControllerTest {
             logs.assertLast { tag == "SingleInstance" && message.startsWith("No instance on port $port") }
         } finally {
             Logger.setLogWriters(platformLogWriter())
+        }
+    }
+
+    @Test
+    fun portTakenByAnotherProgramSinceACrashIsNotHandedOver() {
+        ServerSocket(0, 1, InetAddress.getLoopbackAddress()).use { foreign ->
+            // Reads the message like the app would, then answers as something else
+            val worker =
+                thread {
+                    foreign.accept().use { client ->
+                        client.inputStream.bufferedReader().readLine()
+                        client.outputStream.write("HTTP/1.1 400 Bad Request\n".toByteArray())
+                        client.outputStream.flush()
+                    }
+                }
+            File(dataDir, "app.port").writeText(foreign.localPort.toString())
+
+            assertFalse(SingleInstanceController(dataDir).notifyExistingInstance())
+            assertFalse(File(dataDir, "app.port").exists())
+            worker.join()
         }
     }
 

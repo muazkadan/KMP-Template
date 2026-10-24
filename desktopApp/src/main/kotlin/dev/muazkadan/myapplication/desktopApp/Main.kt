@@ -96,7 +96,7 @@ fun main(args: Array<String>) {
         }
 
         // Kept out of the key(languageTag) below, so a change of language leaves the user on the same
-        // screen
+        // screen, and out of the window, so it opens again on the screen it was closed on
         val backStack =
             rememberSerializable(serializer = NavBackStackSerializer(Screen.serializer())) {
                 NavBackStack<Screen>(Screen.Splash)
@@ -202,62 +202,65 @@ fun main(args: Array<String>) {
             )
         }
 
-        Window(
-            // Closing hides to the tray; Quit ends the app
-            onCloseRequest = { isVisible = false },
-            state = windowState,
-            visible = isVisible,
-            title = appName,
-            icon = appIcon,
-        ) {
-            window.minimumSize = Dimension(WindowStateManager.MIN_WIDTH, WindowStateManager.MIN_HEIGHT)
+        // Only while it is open: a hidden window keeps its GPU surfaces and all of its UI in memory.
+        // Deep links that come meanwhile wait in ExternalNavigator until it's back
+        if (isVisible) {
+            Window(
+                // Closing hides to the tray; Quit ends the app
+                onCloseRequest = { isVisible = false },
+                state = windowState,
+                title = appName,
+                icon = appIcon,
+            ) {
+                window.minimumSize = Dimension(WindowStateManager.MIN_WIDTH, WindowStateManager.MIN_HEIGHT)
 
-            val themeMode by preferencesManager.themeMode.collectAsState(initialThemeMode)
-            // isSystemInDarkTheme sees the system's theme only inside a window's content
-            val darkTheme =
-                when (themeMode) {
-                    ThemeMode.SYSTEM -> isSystemInDarkTheme()
-                    ThemeMode.LIGHT -> false
-                    ThemeMode.DARK -> true
-                }
-            SideEffect { SwingTheme.apply(darkTheme) }
+                val themeMode by preferencesManager.themeMode.collectAsState(initialThemeMode)
+                // isSystemInDarkTheme sees the system's theme only inside a window's content
+                val darkTheme =
+                    when (themeMode) {
+                        ThemeMode.SYSTEM -> isSystemInDarkTheme()
+                        ThemeMode.LIGHT -> false
+                        ThemeMode.DARK -> true
+                    }
+                SideEffect { SwingTheme.apply(darkTheme) }
 
-            LaunchedEffect(restoreRequests) {
-                if (restoreRequests > 0) {
-                    window.toFront()
-                    window.requestFocus()
-                }
-            }
-
-            // Strings are looked up as the content is composed, so a new language composes all of it
-            // anew, the window's menus with it
-            key(languageTag) {
-                MenuBar {
-                    Menu(stringResource(Res.string.desktop_menu_file)) {
-                        Item(
-                            stringResource(Res.string.desktop_menu_close_window),
-                            shortcut = KeyShortcut(Key.W, meta = isMac, ctrl = !isMac),
-                            onClick = { isVisible = false },
-                        )
-                        Separator()
-                        Item(
-                            stringResource(Res.string.desktop_quit),
-                            shortcut = KeyShortcut(Key.Q, meta = isMac, ctrl = !isMac),
-                            onClick = ::exitApplication,
-                        )
+                LaunchedEffect(restoreRequests) {
+                    if (restoreRequests > 0) {
+                        window.toFront()
+                        window.requestFocus()
                     }
                 }
 
-                // Compose takes a window's direction from the locale it opened with and never looks
-                // again, so a right-to-left language is set here
-                val layoutDirection =
-                    if (ComponentOrientation.getOrientation(Locale.getDefault()).isLeftToRight) {
-                        LayoutDirection.Ltr
-                    } else {
-                        LayoutDirection.Rtl
+                // Strings are looked up as the content is composed, so a new language composes all of it
+                // anew, the window's menus with it
+                key(languageTag) {
+                    MenuBar {
+                        Menu(stringResource(Res.string.desktop_menu_file)) {
+                            Item(
+                                stringResource(Res.string.desktop_menu_close_window),
+                                shortcut = KeyShortcut(Key.W, meta = isMac, ctrl = !isMac),
+                                onClick = { isVisible = false },
+                            )
+                            Separator()
+                            Item(
+                                stringResource(Res.string.desktop_quit),
+                                shortcut = KeyShortcut(Key.Q, meta = isMac, ctrl = !isMac),
+                                onClick = ::exitApplication,
+                            )
+                        }
                     }
-                CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
-                    App(backStack = backStack)
+
+                    // Compose takes a window's direction from the locale it opened with and never looks
+                    // again, so a right-to-left language is set here
+                    val layoutDirection =
+                        if (ComponentOrientation.getOrientation(Locale.getDefault()).isLeftToRight) {
+                            LayoutDirection.Ltr
+                        } else {
+                            LayoutDirection.Rtl
+                        }
+                    CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
+                        App(backStack = backStack)
+                    }
                 }
             }
         }
